@@ -49,3 +49,10 @@ def register(request):
             return redirect('/')
     else:
         return render(request, 'register.html', {})
+
+
+def chat(request, room):
+    if request.user.is_authenticated:
+        return render(request, 'chat.html', {'room': room, 'user': request.user.username})
+    else:
+        return redirect('/')
