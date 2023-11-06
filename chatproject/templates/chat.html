@@ -14,31 +14,46 @@
 
 <body>
 	<div>
-		<div class="card" id="chat2" >
+		<div class="card" id="chat2">
 			<div class="card-header">
 				<h5 class="mb-0">Chat</h5>
 			</div>
 			<div id="content" class="chatmessages overflow-auto" style="max-height: 75vh; left: 10%; top: 15%;">
+				<!-- contents come here! -->
+				{% for m in messages %}
+				{% if m.sender.username != user %}
+				<div class="d-flex flex-row justify-content-start">
+					<div class="medium p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;">
+						<div>{{m.message}}<p class="message-time2">{{m.timestamp}}</p>
+						</div>
+					</div>
+				</div>
+				{% else %}
+				<div class="d-flex flex-row justify-content-end">
+					<div class="medium p-2 me-3 mb-1 text-white rounded-3" style="background-color:#25D366">
+						<div>{{m.message}} <p class="message-time">{{m.timestamp}}</p>
+						</div>
+					</div>
+				</div>
+				{% endif %}
 
+				{% endfor %}
 			</div>
 			<div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
-				<img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp" alt="avatar 3"
-					style="width: 40px; height: 100%;">
-				<input type="text" class="form-control form-control-lg" id="input"
-					placeholder="Type message" style="margin-bottom: 0;">
-					<button class="btn btn-warning" type="button" id="submit" style="padding-top: .55rem;">
-						Send
-					  </button>
-				<!-- <a class="ms-1 text-muted" href="#!"><i class="fas fa-paperclip"></i></a>
-				<a class="ms-3 text-muted" href="#!"><i class="fas fa-smile"></i></a> -->
-				<!-- <a class="ms-3" href="#!"><i class="fas fa-paper-plane"></i></a> -->
+				<input type="text" name="text_input" id="input">
+				<button class="btn btn-warning" type="submit" id="submit" style="padding-top: .55rem;">
+					Send
+				</button>
 			</div>
 		</div>
 	</div>
 
 	<script>
+		const now = new Date();
 		let room = "{{room}}";
 		const user = "{{user}}";
+		const recipient = "{{recipient}}"
+		console.log(room);
 		const socket = new WebSocket('ws://'
 			+ window.location.host
 			+ '/ws/'
@@ -47,18 +62,13 @@
 			// console.log(JSON.parse(e.data));
 			sender = JSON.parse(e.data).sender;
 			result = JSON.parse(e.data).message;
-			console.log(sender, result);
-			document.getElementById("content").innerHTML += 
-			`<div class="d-flex flex-row justify-content-start mb-4">
-					<img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3-bg.webp"
-					alt="avatar 1" style="width: 45px; height: 100%;">
-				<div>
-					<p class="small p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;">` + result + `</p>
-					<p class="small ms-3 mb-3 rounded-3 text-muted">00:07</p>
+			document.getElementById("content").innerHTML +=
+				`<div class="d-flex flex-row justify-content-start">
+				<div class="medium p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;">
+					<div>` + result + `<p class="message-time2">
+	${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</p></div>
 				</div>
 			</div>`;
-			// document.getElementById("results").value += sender + ":" + result + "\n";
-			// console.log(document.getElementsByClassName("chatmessages").innerHTML);
 		}
 
 		socket.onclose = (e) => {
@@ -67,30 +77,32 @@
 
 		document.querySelector('#input').onkeyup = function (e) {
 			if (e.keyCode === 13) { // enter, return 
-				document.querySelector('#submit ').click();
+				document.querySelector('#submit').click();
 			}
 		};
 
 		document.querySelector("#submit").onclick = (e) => {
-			inputfield = document.querySelector("#input")
-			mess = inputfield.value
-			console.log(mess);
-			socket.send(JSON.stringify(
-				{
-					sender: user,
-					message: mess
-				}
-			))
-			document.getElementById("content").innerHTML +=
-			`<div class="d-flex flex-row justify-content-end mb-4">
-					<div>
-						<p class="small p-2 me-3 mb-1 text-white rounded-3 bg-primary">` + mess +`</p>
-						<p class="small me-3 mb-3 rounded-3 text-muted d-flex justify-content-end">00:09</p>
+			inputfield = document.querySelector("#input");
+			let messa = inputfield.value;
+
+			if ((messa.trim()).length != 0) {
+				socket.send(JSON.stringify(
+					{
+						sender: user,
+						recipient: recipient,
+						message: messa
+					}
+				))
+				document.getElementById("content").innerHTML +=
+				`<div class="d-flex flex-row justify-content-end">
+					<div class="medium p-2 me-3 mb-1 text-white rounded-3" style="background-color:#25D366">
+						<div>` + messa + `<p class="message-time">
+						${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</p>
+						</div>
 					</div>
-					<img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava4-bg.webp"
-						alt="avatar 1" style="width: 45px; height: 100%;">
 				</div>`;
-			console.log(document.getElementById("content").innerHTML);
+				document.getElementById("input").value = "";
+			}
 			inputfield.value = "";
 		}
 	</script>

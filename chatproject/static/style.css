@@ -28,6 +28,24 @@ h1 {
     background: #eee;
 }
 
+.message-time {
+    margin: 0 !important;
+    margin-left: 50px !important;
+    font-size: 12px;
+    text-align: right;
+    color: white;
+    font-size:0.5em;
+}
+
+.message-time2 {
+    margin: 0 !important;
+    margin-left: 50px !important;
+    font-size: 12px;
+    text-align: right;
+    color: black;
+    font-size:0.5em;
+}
+
 .card-header {
     background-color: red;
     text-align: center;

@@ -1,6 +1,9 @@
+import datetime
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.auth.models import auth
+from asgiref.sync import sync_to_async
+from . models import User, Message, Friend
+from django.db.models import Q
 
 class Chat(AsyncWebsocketConsumer):
     async def connect(self):
@@ -16,7 +19,14 @@ class Chat(AsyncWebsocketConsumer):
     # IMPORTANT 'send.message' is for function in line 27 "send_message" we replace by "."
     async def receive(self, text_data):
         room = self.scope['url_route']['kwargs']['room']
-        message = json.loads(text_data)['message']
+        data = json.loads(text_data)
+        message = data['message']
+        sender = data['sender']
+        recipient = data['recipient']
+
+
+        await self.save_message(sender, recipient, message)
+
         await self.channel_layer.group_send(
             room,
             {
@@ -37,3 +47,10 @@ class Chat(AsyncWebsocketConsumer):
         else:
             pass
     
+    @sync_to_async
+    def save_message(self, sender, recipient, message):
+        user_sender = User.objects.get(username=sender)
+        user_recipient = User.objects.get(username=recipient)
+        Message.objects.create(sender=user_sender, recipient=user_recipient, message=message, timestamp=datetime.datetime.now())
+        friendship = Friend.objects.filter(Q(user1=user_sender) | Q(user2=user_sender)).first()
+        friendship.save()
