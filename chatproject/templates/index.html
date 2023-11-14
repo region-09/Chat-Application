@@ -1,1 +1,350 @@
-<h1>Welcome, {{user}}!</h1>
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body style="background-color: rgb(42, 81, 255);">
+    <h1>Welcome, {{user}}!</h1>
+    <link rel="stylesheet" href="{% static 'main/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <section ui-view="" autoscroll="false" ng-class="app.viewAnimation" class="ng-scope container ng-fadeInLeftShort"
+        style=""><!-- uiView:  -->
+        {% csrf_token %}
+        <div ui-view="" class="ng-fadeInLeftShort ng-scope">
+            <div class="container-overlap bg-indigo-500 ng-scope">
+                <div class="media m0 pv">
+                    <div class="media-left">
+                        <a href="#">
+                            <img src="{{user.profileimage.profile_image}}" width="80" height="80"
+                                alt="User" class="rounded-circle">
+                        </a>
+                    </div>
+                    <div class="media-body media-middle">
+                        <h4 class="media-heading text-white">Almaz Ruslanov</h4>
+                        <span class="text-white">Almaz is writing his diploma and having some issues!!!.
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="container-lg ng-scope">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <!-- Inner card-->
+                            <!-- zip(media_parts, liked_by_user, comments, shared, date) -->
+                            {% for media, like, comments, share, date in medias %}
+                            <div class="card-body" id="{{media.owner}}*{{media.reposter}}*{{date}}">
+                                <div>{{formatted_date}}</div>
+                                <div class="card">
+                                    <div class="card-heading">
+                                        <div class="media m0">
+                                            <div class="media-left">
+                                                <a href="#">
+                                                    {% if media.owner.username != media.reposter.username %}
+                                                        <img src="{{media.reposter.profileimage.profile_image}}" width="50" height="50"
+                                                            alt="User" class="rounded-circle">
+                                                    {% else %}
+                                                        <img src="{{media.owner.profileimage.profile_image}}" width="50" height="50"
+                                                            alt="User" class="rounded-circle">
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                            <div class="media-body media-middle pt-sm">
+                                                {% if media.owner.username != media.reposter.username %}
+                                                    <p class="media-heading m0 text-bold">{{media.reposter.username}} [repost from:{{media.owner.username}}]</p>
+                                                {% else %}
+                                                    <p class="media-heading m0 text-bold">{{media.owner.username}}</p>
+                                                {% endif %}
+                                                <small class="text-muted"><em
+                                                        class="ion-earth text-muted mr-sm"></em><span>{{media.upload_date}}</span></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="cont">
+                                        {% if media.media != "" %}
+                                        {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
+                                        <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive">
+                                        {% endif %}
+                                        {% endif %}
+                                        {% if media.media != ""%}
+                                        {% if media.media.url|slice:"-4:" == ".mp4" or media.media.url|slice:"-4:" == ".avi" or media.media.url|slice:"-4:" == ".mov" %}
+                                        <video class="w-100" controls>
+                                            <source
+                                                src="http://webprogramozas.inf.elte.hu/students/fx29ql/video1261793259.mp4"
+                                                type="video/mp4" />
+                                        </video>
+                                        {% endif %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-item-text bg-transparent">
+                                        <p>
+                                            {{media.description}}
+                                        </p>
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="like p-2 cursor">
+                                            <div class="row">
+                                                <div class="col center-block" style="text-align: center;">
+                                                    <a href="" onclick="clicked(event)"
+                                                        style="font-size: 1em; color: darkcyan;">
+                                                        {% if like == 0 %}
+                                                            <i class="far fa-thumbs-up me-2"> Like</i>
+                                                        {% else %}
+                                                            <i class="fas fa-thumbs-up me-2"> Like</i>
+                                                        {% endif %}
+                                                    </a>
+                                                </div>
+                                                <div class="col center-block" style="text-align: center;">
+                                                    <a href="" onclick="comment(event)"
+                                                        style="font-size: 1em; color: darkcyan;">
+                                                        <i class="far fa-comment-dots me-2"> Comment</i>
+                                                    </a>
+                                                </div>
+                                                <div class="col center-block" style="text-align: center;">
+                                                    <a href="" onclick="share(event)"
+                                                        style="font-size: 1em; color: darkcyan;">
+                                                        {% if share == 0 %}
+                                                            <i class="far fa-share-square"> Share</i>
+                                                        {% else %}
+                                                            <i class="fas fa-share-square"> Share</i>
+                                                        {% endif %}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container" style="max-height: 200px; overflow: auto; display: none;">
+                                        <div class="mt-3 d-flex flex-row align-items-center p-3 form-color">
+                                            <img src="https://i.imgur.com/zQZSWrt.jpg" width="30"
+                                                class="rounded-circle mr-2">
+                                            <input type="text" class="form-control" name="{{media.owner}}*{{media.reposter}}*{{date}}" placeholder="Enter your comment...">
+                                            <button class="btn btn-success" onclick="submit_comment(event)">Comment</button>
+                                        </div>
+                                        <div class="mt-2">
+                                            {% for comment in comments %}
+                                            <div class="d-flex flex-row p-3">
+                                                <img src="https://i.imgur.com/zQZSWrt.jpg" width="40" height="40"
+                                                    class="rounded-circle mr-3">
+                                                <div class="w-100">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div class="d-flex flex-row align-items-center">
+                                                            <span class="mr-2">{{comment.user.username}}</span>
+                                                        </div>
+                                                        <small>{{comment.comment_date}}</small>
+                                                    </div>
+                                                    
+                                                    <p class="text-justify comment-text mb-4">
+                                                        {{comment.comment}}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- inner card end  -->
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        function clicked(event) {
+            event.preventDefault();
+            console.log(event.target);
+            let el = event.target;
+            if (el.tagName == 'A') {
+                el = el.children[0];
+            }
+            const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+
+            var csrfToken = $('[name=csrfmiddlewaretoken]').val();
+            if (el.classList.contains('far')) {
+                el.classList.remove('far');
+                el.classList.add('fas');
+                $.ajax({
+                    type: 'POST',
+                    url: "",  // Replace with your actual endpoint
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        address: p.id,
+                        comment: "",
+                        command: "like",
+                    },
+                    success: function (data) {
+                        console.log('Success! Clicked');
+                        // Add logic to update UI if needed
+                        // For example, change the like button appearance or count
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            } else {
+                el.classList.remove('fas');
+                el.classList.add('far');
+
+                $.ajax({
+                    type: 'POST',
+                    url: "",  // Replace with your actual endpoint
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        address: p.id,
+                        comment: "",
+                        command: "dislike",
+                    },
+                    success: function (data) {
+                        console.log('Success! Clicked');
+                        // Add logic to update UI if needed
+                        // For example, change the like button appearance or count
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        }
+        function comment(event) {
+            event.preventDefault();
+            console.log(event.target);
+            let el = event.target;
+            if (el.tagName == 'A') {
+                el = el.children[0];
+            }
+            if (el.classList.contains('far')) {
+                el.classList.remove('far');
+                el.classList.add('fas');
+            } else {
+                el.classList.remove('fas');
+                el.classList.add('far');
+            }
+            const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+            
+            console.log(p.id);
+
+            const m = document.getElementById(p.id);
+
+            const hidden_comment_part = m.querySelector('.container');
+            if (hidden_comment_part.style.display == "none") {
+                hidden_comment_part.style.display = "block";
+            } else {
+                hidden_comment_part.style.display = "none";
+            }
+        }
+        function share(event) {
+            event.preventDefault();
+            console.log(event.target);
+            let el = event.target;
+            if (el.tagName == 'A') {
+                el = el.children[0];
+            }
+            if (el.classList.contains('far')) {
+                el.classList.remove('far');
+                el.classList.add('fas');
+
+                const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
+                console.log(p.id);
+
+                var csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+                $.ajax({
+                    type: 'POST',
+                    url: "",  // Replace with your actual endpoint
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: {
+                        address: p.id,
+                        comment: "",
+                        command: "share",
+                    },
+                    success: function (data) {
+                        console.log('Success!');
+                        // Add logic to update UI if needed
+                        // For example, change the like button appearance or count
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        }
+        function submit_comment(event) {
+            console.log("process!");
+            // parent = div before comment input, comment button!
+            const parent = event.target.parentNode;
+            const name = parent.name;
+            const input_value = parent.children[1].value;
+            const address = parent.children[1].name
+            const now = new Date();
+            // comment_to_put is div where all comments are shown!(we append it)
+            console.log('here!');
+            const comment_to_put = parent.parentNode.children[1];
+
+            console.log(parent.children[1].name);
+            if (input_value.trim().length != 0) {
+                // append div of comments:
+                comment_to_put.innerHTML =
+                `<div class="d-flex flex-row p-3">
+                    <img src="https://i.imgur.com/zQZSWrt.jpg" width="40" height="40"
+                        class="rounded-circle mr-3">
+                    <div class="w-100">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-row align-items-center">
+                                <span class="mr-2">{{user}}</span>
+                            </div>
+                            <small>${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</small>
+                        </div>
+                        
+                        <p class="text-justify comment-text mb-4">
+                            ${input_value.trim()}
+                        </p>
+                    </div>
+                </div>` + comment_to_put.innerHTML;
+                // sending to server part:
+                var csrfToken = $('[name=csrfmiddlewaretoken]').val();
+                $.ajax({
+                    type: 'POST',
+                    url: "",  // Replace with your actual endpoint
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: { 
+                        address : address,
+                        comment: input_value.trim(),
+                        command: "comment",
+                    },
+                    success: function (data) {
+                        console.log('Success!');
+                        // Add logic to update UI if needed
+                        // For example, change the like button appearance or count
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+            parent.children[1].value = "";
+
+        }
+    </script>
+    <style>
+    </style>
+</body>
+
+</html>
