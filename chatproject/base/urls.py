@@ -9,4 +9,6 @@ urlpatterns = [
     path('chat/<str:room>', views.chat, name='chat'),
     path('chatting', views.friends_message_view, name='friends_message_view'),
     path('upload', views.upload, name='upload'),
+    path('profile/<str:username>', views.profile, name='profile'),
+    path('requests', views.requests, name='requests'),
 ]

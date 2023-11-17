@@ -23,7 +23,7 @@
                 <div class="media m0 pv">
                     <div class="media-left">
                         <a href="#">
-                            <img src="{{user.profileimage.profile_image}}" width="80" height="80"
+                            <img src="{{user.profileinfo.profile_image}}" width="80" height="80"
                                 alt="User" class="rounded-circle">
                         </a>
                     </div>
@@ -49,10 +49,10 @@
                                             <div class="media-left">
                                                 <a href="#">
                                                     {% if media.owner.username != media.reposter.username %}
-                                                        <img src="{{media.reposter.profileimage.profile_image}}" width="50" height="50"
+                                                        <img src="{{media.reposter.profileinfo.profile_image}}" width="50" height="50"
                                                             alt="User" class="rounded-circle">
                                                     {% else %}
-                                                        <img src="{{media.owner.profileimage.profile_image}}" width="50" height="50"
+                                                        <img src="{{media.owner.profileinfo.profile_image}}" width="50" height="50"
                                                             alt="User" class="rounded-circle">
                                                     {% endif %}
                                                 </a>

@@ -37,6 +37,15 @@ class Shared(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     media = models.ForeignKey(Media, on_delete=models.CASCADE, related_name='shared_media')
 
-class ProfileImage(models.Model):
+class ProfileInfo(models.Model):
+    degree = models.CharField(max_length=100, null=True, blank=True, default='')
+    workplace = models.CharField(max_length=100, null=True, blank=True, default='')
+    age = models.IntegerField(null=True, blank=True)
+    address = models.CharField(max_length=100, null=True, blank=True, default='')
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_image = models.FileField(upload_to='profile_images/', null=True, blank=True, default='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png')
+
+
+class Requests(models.Model):
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='from_user')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='to_user')

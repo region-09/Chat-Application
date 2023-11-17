@@ -2,8 +2,10 @@ import datetime
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
-from .models import Friend, Message, Media, Shared, Like, Comment
+from .models import Friend, Message, Media, Shared, Like, Comment, Requests, ProfileInfo
 from django.db.models import Q
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 # TODO: make all only authenticated user usable only
 
@@ -74,27 +76,57 @@ def login(request):
     else:
         return render(request, 'login.html', {})
 
-# TODO: validations to be added! 2) and not logged in only requirement
 def register(request):
+    print(request.user.is_authenticated, request.method)
     if request.user.is_authenticated is False and request.method == 'POST':
+        print('success')
+        name = request.POST['name'].strip()
+        surname = request.POST['surname'].strip()
         username = request.POST['username']
         email = request.POST['email']
         password = request.POST['password']
         password2 = request.POST['password2']
-        if password != password2:
-            messages.info(request, 'Passwords did not match')
-            return redirect('register')
+        file = None
+        found = False
+        if password != password2 or ' ' in password:
+            messages.info(request, 'Passwords did not match or contains spaces')
+            found = True
+        if is_valid_email(email) is False:
+            messages.info(request, 'Invalid email or contains spaces!')
+            found = True
         elif User.objects.filter(email=email).exists():
             messages.info(request, 'Email already registered')
-            return redirect('register')
-        elif User.objects.filter(username=username).exists():
-            messages.info(request, 'username already exists')
+            found = True
+        if len(name) == 0:
+            messages.info(request, 'Name is empty!')
+            found = True
+        if len(surname) == 0:
+            messages.info(request, 'Surname is empty!')
+            found = True
+        if ' ' in username:
+            messages.info(request, 'Username should not contain spaces!')
+            found = True
+        if User.objects.filter(username=username).exists():
+            messages.info(request, 'Username already exists')
+            found = True
+        if len(request.FILES) == 1:
+            file = request.FILES['inputFile']
+            if file.name.endswith((".jpg", ".png", ".jpeg")) is False:
+                messages.info(request, 'Profile Image is not supported upload one of the followings: jpg, png, jpeg')
+                found = True
+        if found:
             return redirect('register')
         else:
-            user = User.objects.create_user(username=username, email=email,password=password)
+            user = User.objects.create_user(username=username, email=email,password=password, first_name=name, last_name=surname)
+            if file is not None:
+                ProfileInfo.objects.create(user=user, profile_image=file)
+            else:
+                ProfileInfo.objects.create(user=user)
             user.save()
             return redirect('/')
     else:
+        if request.user.is_authenticated:
+            return redirect('/')
         return render(request, 'register.html', {})
 
 
@@ -187,7 +219,68 @@ def upload(request):
         return redirect('/')
     else:
         return render(request, 'upload.html', {})
-    
+
+def requests(request):
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            print(request.POST['from_user'])
+            print(request.POST['command'])
+            from_user = User.objects.get(username=request.POST['from_user'])
+            if (request.POST['command'] == 'add'):
+                Friend.objects.create(user1=request.user, user2=from_user)
+            else:
+                Friend.objects.get(user1=from_user, user2=request.user).delete()
+            Requests.objects.get(from_user=from_user).delete()
+            return redirect('requests')
+        else:
+            request_db = Requests.objects.filter(to_user=request.user)
+            return render(request, 'requests.html', {"requests": request_db})
+    else:
+        return redirect('/')
+
+
+def profile(request, username):
+    if User.objects.filter(username=username).exists() is False:
+        return redirect('/')
+    profile_user = User.objects.get(username=username)
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            email = request.POST['email'].strip()
+            workplace = request.POST['workplace'].strip()
+            degree = request.POST['degree'].strip()
+            address = request.POST['address'].strip()
+            age = request.POST['age'].strip()
+            data_dict = {'email': email,
+            'workplace': workplace, 'degree': degree,
+            'address': address, 'age': age}
+            if validator(request, data_dict):
+                print('validate')
+                profile_info = ProfileInfo.objects.get(user=profile_user)
+                if len(request.FILES) == 1:
+                    file = request.FILES['inputFile']
+                    if file.name.endswith((".jpg", ".png", ".jpeg")):
+                        profile_info.profile_image = file
+                    else:
+                        return redirect('/')
+                profile_info.degree = degree
+                profile_info.workplace = workplace
+                profile_info.age = age
+                profile_info.save()
+            return redirect('profile')
+        else:
+            current = False
+            friend = 0
+            if request.user.username == profile_user.username:
+                current = True
+            if Friend.objects.filter(user1=request.user, user2=profile_user).exists() and Friend.objects.filter(user1=profile_user, user2=request.user).exists():
+                friend = 2
+            elif Friend.objects.filter(user1=request.user, user2=profile_user).exists() and Friend.objects.filter(user1=profile_user, user2=request.user).exists() is False:
+                friend = 1
+            return render(request, 'profile.html',
+            {'user': request.user, 'current': current, 'friend': friend})
+    return redirect('/')
+
+
 
 # Helper functions:
 def collector(request, medias):
@@ -214,3 +307,30 @@ def collector(request, medias):
             media_parts.append(media)
     
     return zip(media_parts, liked_by_user, comments, shared, date)
+
+def validator(request, data_dict):
+    found = False
+    for key, value in data_dict.items():
+        if len(value) == 0:
+            messages.info(request, key.capitalize() + ' empty!')
+            found = True
+        if key == 'email' and is_valid_email(value) is False:
+            messages.info(request, 'Invalid email!')
+            found = True
+        if key == 'age' and value.isdigit == False:
+            messages.info(request, 'Age is not numeric')
+            found = True
+        if len(value) > 100:
+            messages.info(request, key.capitalize() + ' too long (max 100)!')
+            found = True
+
+    if found:
+        return False
+    return True
+
+def is_valid_email(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError:
+        return False

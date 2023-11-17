@@ -1,0 +1,8 @@
+button {
+    border-radius: 4px;
+    background-color: orangered;
+    color: white;
+}
+input {
+    width: 70%;
+}
