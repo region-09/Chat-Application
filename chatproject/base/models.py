@@ -18,7 +18,7 @@ class Friend(models.Model):
 class Media(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner')
     reposter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reposter')
-    media = models.FileField(upload_to='media/',null=True, blank=True)
+    media = models.FileField(upload_to='publications',null=True, blank=True)
     description = models.TextField()
     upload_date = models.DateTimeField()
 

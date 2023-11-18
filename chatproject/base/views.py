@@ -1,7 +1,9 @@
 import datetime
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
+from django.urls import reverse
 from .models import Friend, Message, Media, Shared, Like, Comment, Requests, ProfileInfo
 from django.db.models import Q
 from django.core.validators import validate_email
@@ -63,7 +65,7 @@ def index(request):
 
 # TODO: 1) validations to be added! 2) and not logged in only requirement
 def login(request):
-    if request.user.is_authenticated and request.method == 'POST':
+    if request.user.is_authenticated is False and request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
         user = auth.authenticate(username=username,password=password)
@@ -74,6 +76,8 @@ def login(request):
             messages.info(request, 'Invalid credentials')
             return redirect('login')
     else:
+        if request.user.is_authenticated:
+            return redirect('/')
         return render(request, 'login.html', {})
 
 def register(request):
@@ -131,6 +135,7 @@ def register(request):
 
 
 def chat(request, room):
+    print('chat!')
     if request.user.is_authenticated:
         user_names = room.split('-')
         current_username = request.user.username
@@ -240,33 +245,62 @@ def requests(request):
 
 
 def profile(request, username):
+    if username == 'admin':
+        return redirect('/')
     if User.objects.filter(username=username).exists() is False:
         return redirect('/')
     profile_user = User.objects.get(username=username)
+    current_user = request.user
     if request.user.is_authenticated:
         if request.method == 'POST':
-            email = request.POST['email'].strip()
-            workplace = request.POST['workplace'].strip()
-            degree = request.POST['degree'].strip()
-            address = request.POST['address'].strip()
-            age = request.POST['age'].strip()
-            data_dict = {'email': email,
-            'workplace': workplace, 'degree': degree,
-            'address': address, 'age': age}
-            if validator(request, data_dict):
-                print('validate')
-                profile_info = ProfileInfo.objects.get(user=profile_user)
-                if len(request.FILES) == 1:
-                    file = request.FILES['inputFile']
-                    if file.name.endswith((".jpg", ".png", ".jpeg")):
-                        profile_info.profile_image = file
+            friendship1 = Friend.objects.filter(user1=current_user, user2=profile_user)
+            friendship2 = Friend.objects.filter(user1=profile_user, user2=current_user)
+            print('post')
+            if request.POST.get('button_action') == 'add_friend':
+                Friend.objects.create(user1=current_user, user2=profile_user)
+                return redirect('profile')
+            elif request.POST.get('button_action') == 'remove_friend':
+                print('removing friend from friendlist')
+                if friendship1.exists():
+                    friendship1.first().delete()
+                if friendship2.exists():
+                    friendship2.first().delete()
+                return redirect('profile')
+            elif request.POST.get('button_action') == 'write_message':
+                print('redirecting to chat page')
+                if username < request.user.username:
+                    return redirect('chat', (username + '-' + current_user.username))
+                else:
+                    return redirect('chat', (current_user.username + '-' + username))
+            else:
+                email = request.POST['email'].strip()
+                workplace = request.POST['workplace'].strip()
+                degree = request.POST['degree'].strip()
+                address = request.POST['address'].strip()
+                age = request.POST['age'].strip()
+                data_dict = {'email': email,
+                'workplace': workplace, 'degree': degree,
+                'address': address, 'age': age}
+                if validator(request, data_dict):
+                    print('validate profile infos')
+                    profile_info = ProfileInfo.objects.get(user=profile_user)
+                    if len(request.FILES) == 1:
+                        file = request.FILES['inputFile']
+                        if file.name.endswith((".jpg", ".png", ".jpeg")):
+                            profile_info.profile_image = file
+                        else:
+                            return redirect('/')
+                    profile_info.degree = degree
+                    profile_user.email = email
+                    profile_info.workplace = workplace
+                    profile_info.address = address
+                    print(age)
+                    if age != '':
+                        profile_info.age = int(age)
                     else:
-                        return redirect('/')
-                profile_info.degree = degree
-                profile_info.workplace = workplace
-                profile_info.age = age
-                profile_info.save()
-            return redirect('profile')
+                        profile_info.age = None
+                    profile_info.save()
+            return redirect('profile', username)
         else:
             current = False
             friend = 0
@@ -276,8 +310,9 @@ def profile(request, username):
                 friend = 2
             elif Friend.objects.filter(user1=request.user, user2=profile_user).exists() and Friend.objects.filter(user1=profile_user, user2=request.user).exists() is False:
                 friend = 1
+            print('get')
             return render(request, 'profile.html',
-            {'user': request.user, 'current': current, 'friend': friend})
+            {'user': profile_user, 'current': current, 'friend': friend})
     return redirect('/')
 
 
@@ -311,13 +346,10 @@ def collector(request, medias):
 def validator(request, data_dict):
     found = False
     for key, value in data_dict.items():
-        if len(value) == 0:
-            messages.info(request, key.capitalize() + ' empty!')
-            found = True
         if key == 'email' and is_valid_email(value) is False:
             messages.info(request, 'Invalid email!')
             found = True
-        if key == 'age' and value.isdigit == False:
+        if value != '' and key == 'age' and value.isdigit() == False:
             messages.info(request, 'Age is not numeric')
             found = True
         if len(value) > 100:
@@ -329,6 +361,7 @@ def validator(request, data_dict):
     return True
 
 def is_valid_email(email):
+
     try:
         validate_email(email)
         return True
