@@ -152,7 +152,7 @@ def chat(request, room):
             current_recipient = User.objects.get(username=recipient)
         else:
             return redirect('/')
-        if  Friend.objects.filter(Q(user1=current_user, user2=current_recipient) | Q(user1=current_recipient,user2=current_user)).exists() is False:
+        if Friend.objects.filter(user1=current_user, user2=current_recipient).exists() is False or Friend.objects.filter(user1=current_recipient, user2=current_user).exists() is False:
             return redirect('/')
         messages = Message.objects.filter(Q(sender=current_user, recipient=current_recipient) | Q(sender=current_recipient,recipient=current_user)).order_by('timestamp')
         friendship = Friend.objects.filter(Q(user1=current_user, user2=current_recipient) | Q(user1=current_recipient,user2=current_user)).last()
@@ -234,7 +234,7 @@ def requests(request):
             if (request.POST['command'] == 'add'):
                 Friend.objects.create(user1=request.user, user2=from_user)
             else:
-                Friend.objects.get(user1=from_user, user2=request.user).delete()
+               Friend.objects.get(user1=from_user, user2=request.user).delete()
             Requests.objects.get(from_user=from_user).delete()
             return redirect('requests')
         else:
@@ -315,6 +315,49 @@ def profile(request, username):
             {'user': profile_user, 'current': current, 'friend': friend})
     return redirect('/')
 
+def people(request):
+    if request.user.is_authenticated:
+        peoples = User.objects.all()[:8]
+        if request.method == 'POST':
+            print('people', request.POST['command'])
+            if request.POST['command'] == 'search':
+                peoples = User.objects.filter(username__startswith=request.POST['search_handle'])
+            elif request.POST['command'] == 'add_friend':
+                other_user = User.objects.get(username=request.POST['user'])
+                if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
+                    Friend.objects.create(user1=request.user, user2=other_user)
+                if Requests.objects.filter(from_user=request.user, to_user=other_user).exists() is False:
+                    Requests.objects.create(from_user=request.user, to_user=other_user)
+            elif request.POST['command'] == 'accept_friend':
+                other_user = User.objects.get(username=request.POST['user'])
+                if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
+                    Requests.objects.filter(from_user=other_user, to_user=request.user).first().delete()
+                if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
+                    Friend.objects.create(user1=request.user, user2=other_user)
+            elif request.POST['command'] == 'delete_request':
+                # Deletes all relations they have!
+                other_user = User.objects.get(username=request.POST['user'])
+                if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
+                    Requests.objects.filter(from_user=other_user, to_user=request.user).first().delete()
+                if Requests.objects.filter(from_user=request.user, to_user=other_user).exists():
+                    Requests.objects.filter(from_user=request.user, to_user=other_user).first().delete()
+                if Friend.objects.filter(user1=request.user, user2=other_user).exists():
+                    Friend.objects.filter(user1=request.user, user2=other_user).first().delete()
+                if Friend.objects.filter(user1=other_user, user2=request.user).exists():
+                    Friend.objects.filter(user1=other_user, user2=request.user).first().delete()
+            else:
+                other_user = User.objects.get(username=request.POST['user'])
+                if other_user.username < request.user.username:
+                    return redirect('chat', (other_user.username + '-' + request.user.username))
+                else:
+                    return redirect('chat', (request.user.username + '-' + other_user.username))
+            print('people rendering')
+            friendship = get_relationships(request.user, peoples)
+            return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship)})
+        friendship = get_relationships(request.user, peoples)
+        return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship)})
+    else:
+        return redirect('/')
 
 
 # Helper functions:
@@ -362,8 +405,24 @@ def validator(request, data_dict):
 
 def is_valid_email(email):
 
+
     try:
         validate_email(email)
         return True
     except ValidationError:
         return False
+    
+def get_relationships(current_user, peoples):
+    friend_type = []
+    for people in peoples:
+        relation1 = Friend.objects.filter(user1=current_user, user2=people)
+        relation2 = Friend.objects.filter(user1=people, user2=current_user)
+        if relation1.exists() and relation2.exists():
+            friend_type.append(3)
+        elif relation1.exists() is False and relation2.exists():
+            friend_type.append(2)
+        elif relation1.exists() and relation2.exists() is False:
+            friend_type.append(1)
+        else:
+            friend_type.append(0)
+    return friend_type

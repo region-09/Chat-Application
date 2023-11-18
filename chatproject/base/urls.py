@@ -11,4 +11,5 @@ urlpatterns = [
     path('upload', views.upload, name='upload'),
     path('profile/<str:username>', views.profile, name='profile'),
     path('requests', views.requests, name='requests'),
+    path('people', views.people, name='people'),
 ]
