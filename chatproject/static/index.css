@@ -527,3 +527,6 @@
 }
 
 .link-grey { color: #aaa; } .link-grey:hover { color: #00913b; }
+.btn {
+    padding: .55rem 1.5rem .45rem;
+}
