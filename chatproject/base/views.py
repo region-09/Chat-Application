@@ -155,48 +155,58 @@ def chat(request, room):
         if Friend.objects.filter(user1=current_user, user2=current_recipient).exists() is False or Friend.objects.filter(user1=current_recipient, user2=current_user).exists() is False:
             return redirect('/')
         messages = Message.objects.filter(Q(sender=current_user, recipient=current_recipient) | Q(sender=current_recipient,recipient=current_user)).order_by('timestamp')
-        friendship = Friend.objects.filter(Q(user1=current_user, user2=current_recipient) | Q(user1=current_recipient,user2=current_user)).last()
-        print("friendship", Friend.objects.filter(Q(user1=current_user, user2=current_recipient) | Q(user1=current_recipient,user2=current_user)).exists())
+        friendship = Friend.objects.filter(user1=current_user, user2=current_recipient).last()
+        friendship2 = Friend.objects.filter(user1=current_recipient,user2=current_user).last()
+        print("friendship updated!")
         friendship.last_message_date = datetime.datetime.now()
+        friendship2.last_message_date = datetime.datetime.now()
+        friendship2.save()
         friendship.save()
         return render(request, 'chat.html', {'room': room, 
-            'user': current_username, 'recipient': recipient, 'messages':messages})
+            'user': current_username, 'recipient': recipient, 'messages':messages, 'current_recipient': current_recipient})
     else:
         return redirect('/')
 
 def friends_message_view(request):
-    current_user = request.user
-    friends = Friend.objects.filter(Q(user1=current_user) | Q(user2=current_user)).order_by('last_message_date')
-    messages = []
-    for friend in friends:
-        user1 = friend.user1
-        if user1 == current_user:
-            user1 = friend.user2
-        sender_query = Message.objects.filter(sender=user1, recipient=current_user).order_by('timestamp')
-        receiver_query = Message.objects.filter(sender=current_user, recipient=user1).order_by('timestamp')
-        sent_message = ''
-        received_message = ''
-        if len(sender_query) > 0:
-            sent_message = sender_query.last()
-        if len(receiver_query) > 0:
-            received_message = receiver_query.last()
+    if request.user.is_authenticated:
+        current_user = request.user
+        # Find all friends where the current user is user1
+        user1_friends = Friend.objects.filter(user1=current_user)
+        # Find all friends where the current user is user2
+        user2_friends = Friend.objects.filter(user2=current_user)
+        # Find common occurrences in both sets
+        friends = user1_friends.filter(user2__in=user2_friends.values('user1'))
+        print('friends', friends)
+        friend_names = []
+        messages = []
+        for friend in friends:
+            friend_names.append(friend.user2.username)
+            user1 = friend.user1
+            if user1 == current_user:
+                user1 = friend.user2
+            sender_query = Message.objects.filter(sender=user1, recipient=current_user).order_by('timestamp')
+            receiver_query = Message.objects.filter(sender=current_user, recipient=user1).order_by('timestamp')
+            sent_message = ''
+            received_message = ''
+            if len(sender_query) > 0:
+                sent_message = sender_query.last()
+            if len(receiver_query) > 0:
+                received_message = receiver_query.last()
 
-        if (sent_message == '' and received_message == ''):
-            messages.append('')
-        elif (sent_message == '' and received_message != ''):
-            messages.append(received_message)
-        elif (sent_message != '' and received_message == ''):
-            messages.append(sent_message)
-        else:
-            if sent_message.timestamp > received_message.timestamp:
+            if (sent_message == '' and received_message == ''):
+                messages.append('')
+            elif (sent_message == '' and received_message != ''):
+                messages.append(received_message)
+            elif (sent_message != '' and received_message == ''):
                 messages.append(sent_message)
             else:
-                messages.append(received_message)
-
-
-    if request.user.is_authenticated:
+                if sent_message.timestamp > received_message.timestamp:
+                    messages.append(sent_message)
+                else:
+                    messages.append(received_message)
         zipped = zip(friends, messages)
-        return render(request, 'chat_view.html', {'user': current_user,'friends_messages': zipped})
+        print(friend_names)
+        return render(request, 'chat_view.html', {'user': current_user,'friends_messages': zipped, 'friend_names': friend_names})
     else:
         return redirect('/')
     
