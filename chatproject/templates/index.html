@@ -32,7 +32,13 @@
                                 <a href="" id="home" class="nav-link border-hover py-3 text-white"><i class="fa fa-home" aria-hidden="true"> Home</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true"> Messages</i></a>
+                                {% if has_unread_message == False %}
+                                    <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true" 
+                                    id="message_icon"> Messages</i></a>
+                                {% else %}
+                                    <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true" 
+                                    id="message_icon"> Messages<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle"></span></i></a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
                                 <a href="people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
@@ -41,7 +47,12 @@
                                 <a href="upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% if has_unreplied_request == False %}
+                                    <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% else %}
+                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" 
+                                    aria-hidden="true"> Requests<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle"></span></i></a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
                                 <a href="logout" id="sign-out" class="nav-link border-hover py-3 text-white">
@@ -67,7 +78,7 @@
                     </div>
                     <div class="media-body media-middle">
                         <h4 class="media-heading text-white">{{user.last_name}} {{user.first_name}}</h4>
-                        <span class="text-white">{{user.first_name}} is writing his diploma and having some issues!!!.
+                        <span class="text-white">{{user.first_name}} is writing his diploma!!!!.
                         </span>
                     </div>
                 </div>
@@ -79,10 +90,10 @@
                             <!-- Inner card-->
                             <!-- zip(media_parts, liked_by_user, comments, shared, date) -->
                             {% for media, like, comments, share, date in medias %}
-                            <div class="card-body" id="{{media.owner}}*{{media.reposter}}*{{date}}">
+                            <div class="card-body">
                                 <div>{{formatted_date}}</div>
-                                <div class="card">
-                                    <div class="card-heading">
+                                <div class="card" style="border: 3px solid black;"  id="{{media.owner}}*{{media.reposter}}*{{date}}">
+                                    <div class="card-heading" style="border-bottom: 3px solid black;">
                                         <div class="media m0">
                                             <div class="media-left">
                                                 <a href="#">
@@ -107,7 +118,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="cont">
+                                    <div class="cont" style="margin-top: 5px;">
                                         {% if media.media != "" %}
                                         {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
                                         <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive">
@@ -123,10 +134,10 @@
                                         {% endif %}
                                         {% endif %}
                                     </div>
-                                    <div class="card-item-text bg-transparent">
-                                        <p>
-                                            {{media.description}}
-                                        </p>
+                                    <div>
+                                    <div class="card-item-text bg-transparent" style="border-top: 3px solid black;border-bottom: 3px solid black;
+                                    margin-top: 5px; text-align: center;">
+                                        <p style="color: black; font-size: 18px;">{{media.description}}</p>
                                     </div>
                                     <div class="card-footer">
                                         <div class="like p-2 cursor">
@@ -160,9 +171,10 @@
                                             </div>
                                         </div>
                                     </div>
+                                    </div>
                                     <div class="container" style="max-height: 200px; overflow: auto; display: none;">
                                         <div class="mt-3 d-flex flex-row align-items-center p-3 form-color">
-                                            <img src="https://i.imgur.com/zQZSWrt.jpg" width="30"
+                                            <img src="{{user.profileinfo.profile_image.url}}" width="30"
                                                 class="rounded-circle mr-2">
                                             <input type="text" class="form-control"
                                                 name="{{media.owner}}*{{media.reposter}}*{{date}}"
@@ -173,17 +185,19 @@
                                         <div class="mt-2">
                                             {% for comment in comments %}
                                             <div class="d-flex flex-row p-3">
-                                                <img src="https://i.imgur.com/zQZSWrt.jpg" width="40" height="40"
+                                                <img src="{{comment.user.profileinfo.profile_image.url}}" width="30" height="30"
                                                     class="rounded-circle mr-3">
                                                 <div class="w-100">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <div class="d-flex flex-row align-items-center">
-                                                            <span class="mr-2">{{comment.user.username}}</span>
+                                                            <a href="/profile/{{comment.user.username}}" style="text-decoration: none; margin-left: 5px;">
+                                                                <span class="mr-2" style="color: blue;">{{comment.user.username}}</span>
+                                                            </a>
                                                         </div>
                                                         <small>{{comment.comment_date}}</small>
                                                     </div>
 
-                                                    <p class="text-justify comment-text mb-4">
+                                                    <p class="text-justify comment-text mb-4" style="color: black;">
                                                         {{comment.comment}}
                                                     </p>
                                                 </div>
@@ -203,6 +217,44 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script>
+        // websocket listeners! begin
+		var names = "{{friend_names|safe}}";
+        const user = "{{user}}";
+        names = JSON.parse(names.replace(/'/g, '"'));
+        for (let i = 0; i < names.length; i++) {
+            let room = "";
+            if (names[i] > user) {
+                room = user + '-' + names[i];
+            }else {
+                room = names[i] + '-' + user;
+            }
+            const socket = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + room + '/');
+            socket.onmessage = (e) => {
+                console.log('received! notify user!');
+                document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+            }
+            
+            socket.onclose = (e) => {
+                console.log("Socket closed!");
+            }
+        }
+        // socket2 for request notifications:
+        const socket2 = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + "{{user.username}}" + '/');
+        socket2.onmessage = (e) => {
+            console.log('received(friend request)! notify user!');
+            document.getElementById('request_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+        }
+        
+        socket2.onclose = (e) => {
+            console.log("Socket2 closed!");
+        }
+        // websocket listeners! end
         function clicked(event) {
             event.preventDefault();
             console.log(event.target);
@@ -212,6 +264,7 @@
             }
             const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
 
+            console.log(p);
             var csrfToken = $('[name=csrfmiddlewaretoken]').val();
             if (el.classList.contains('far')) {
                 el.classList.remove('far');
@@ -228,7 +281,7 @@
                         command: "like",
                     },
                     success: function (data) {
-                        console.log('Success! Clicked');
+                        console.log('Success! Like Clicked');
                         // Add logic to update UI if needed
                         // For example, change the like button appearance or count
                     },
@@ -335,8 +388,6 @@
             const input_value = parent.children[1].value;
             const address = parent.children[1].name
             const now = new Date();
-            // comment_to_put is div where all comments are shown!(we append it)
-            console.log('here!');
             const comment_to_put = parent.parentNode.children[1];
 
             console.log(parent.children[1].name);
@@ -344,7 +395,7 @@
                 // append div of comments:
                 comment_to_put.innerHTML =
                     `<div class="d-flex flex-row p-3">
-                    <img src="https://i.imgur.com/zQZSWrt.jpg" width="40" height="40"
+                    <img src="{{user.profileinfo.profile_image.url}}" width="40" height="40"
                         class="rounded-circle mr-3">
                     <div class="w-100">
                         <div class="d-flex justify-content-between align-items-center">

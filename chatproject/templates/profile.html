@@ -33,19 +33,19 @@
                                 <a href="/" id="home" class="nav-link border-hover py-3 text-white"><i class="fa fa-home" aria-hidden="true"> Home</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true"> Messages</i></a>
+                                <a href="/chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true"> Messages</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
+                                <a href="/people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
+                                <a href="/upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                <a href="/requests" id="requests" class="nav-link border-hover py-3 text-white active"><i class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="logout" id="sign-out" class="nav-link border-hover py-3 text-white">
+                                <a href="/logout" id="sign-out" class="nav-link border-hover py-3 text-white">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v192c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"/></svg> Sign out</a>
                             </li>
                         </ul>
@@ -75,18 +75,19 @@
                                 <p class="mb-1" style="margin-top: 40px;">Your profile!</p>
                                 {% else %}
                                 <div class="d-flex justify-content-center mb-2" style="margin-top: 40px;">
-                                    {% if friend == 0 %}
-                                    <button type="submit" class="btn btn-primary"  name="button_action" value="add_friend">Add to
-                                        friends</button>
+                                    {% if friend == 2 %}
+                                    <button type="submit" class="btn btn-primary" name="button_action" value="add_friend">Accept</button>
                                     <button type="button" class="btn btn-success ms-2 disabled">Message</button>
                                     {% elif friend == 1%}
-                                    <button type="button" class="btn btn-primary disabled">Add to friends</button>
+                                    <button type="submit" class="btn btn-primary" name="button_action" value="remove_friend">Unfollow</button>
                                     <button type="button" class="btn btn-success ms-2 disabled">Message</button>
-                                    {% else %}
-                                    <button type="submit" class="btn btn-primary" name="button_action" value="remove_friend">Remove form
-                                        friends</button>
+                                    {% elif friend == 3 %}
+                                    <button type="submit" class="btn btn-primary" name="button_action" value="remove_friend">Unfollow</button>
                                     <button type="submit" class="btn btn-success ms-2" name="button_action"
                                         value="write_message">Message</button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-primary" name="button_action" value="add_friend">Follow</button>
+                                    <button type="button" class="btn btn-success ms-2 disabled">Message</button>
                                     {% endif %}
                                 </div>
                                 {% endif %}
