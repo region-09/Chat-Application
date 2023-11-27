@@ -33,7 +33,13 @@
                                 <a href="/" id="home" class="nav-link border-hover py-3 text-white"><i class="fa fa-home" aria-hidden="true"> Home</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true"> Messages</i></a>
+                                {% if has_unread_message == False %}
+                                    <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true" 
+                                    id="message_icon"> Messages</i></a>
+                                {% else %}
+                                    <a href="chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true" 
+                                    id="message_icon"> Messages<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle"></span></i></a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
                                 <a href="people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
@@ -71,8 +77,8 @@
                             </div>
                         </div>
                         <div class="pt-2">
-                            <button class="btn btn-primary" onclick="add_friend(event)">Accept</button>
-                            <button class="btn btn-secondary" onclick="remove_request(event)">Remove</button>
+                            <button class="btn btn-primary" onclick="add_friend(event)" name="accept">Accept</button>
+                            <button class="btn btn-secondary" onclick="remove_request(event)" name="remove">Remove</button>
                         </div>
                     </div>
                 </li>
@@ -84,6 +90,43 @@
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <script>
+        // websocket listeners! begin
+		var names = "{{friend_names|safe}}";
+        const user = "{{user}}";
+        names = JSON.parse(names.replace(/'/g, '"'));
+        for (let i = 0; i < names.length; i++) {
+            let room = "";
+            if (names[i] > user) {
+                room = user + '-' + names[i];
+            }else {
+                room = names[i] + '-' + user;
+            }
+            const socket = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + room + '/');
+            socket.onmessage = (e) => {
+                console.log('received! notify user!');
+                document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+            }
+            
+            socket.onclose = (e) => {
+                console.log("Socket closed!");
+            }
+        }
+        // socket2 for request notifications:
+        const socket2 = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + "{{user.username}}" + '/');
+        socket2.onmessage = (e) => {
+            location.reload();
+        }
+        
+        socket2.onclose = (e) => {
+            console.log("Socket2 closed!");
+        }
+        // websocket listeners! end
         function add_friend(event) {
             var csrfToken = $('[name=csrfmiddlewaretoken]').val();
             const li_to_delete = event.target.parentNode.parentNode.parentNode;

@@ -40,7 +40,12 @@
                                 <a href="upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% if has_unreplied_request == False %}
+                                    <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% else %}
+                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" 
+                                    aria-hidden="true"> Requests<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle"></span></i></a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
                                 <a href="logout" id="sign-out" class="nav-link border-hover py-3 text-white">
@@ -110,7 +115,6 @@
                 + '/ws/notification/'
                 + room + '/');
             socket.onmessage = (e) => {
-                console.log('received!');
                 location.reload();
             }
             
@@ -118,7 +122,21 @@
                 console.log("Socket closed!");
             }
         }
+        // socket2 for request notifications:
+        const socket2 = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + "{{user.username}}" + '/');
+        socket2.onmessage = (e) => {
+            console.log('received(friend request)! notify user!');
+            document.getElementById('request_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+        }
+        
+        socket2.onclose = (e) => {
+            console.log("Socket2 closed!");
+        }
     </script>
 </body>
 
 </html>
+<!-- selenium, openai, asgiref,  -->

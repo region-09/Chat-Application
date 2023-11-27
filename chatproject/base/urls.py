@@ -12,4 +12,5 @@ urlpatterns = [
     path('profile/<str:username>', views.profile, name='profile'),
     path('requests', views.requests, name='requests'),
     path('people', views.people, name='people'),
+    path('chatgpt', views.chatGPT, name='chatgpt'),
 ]

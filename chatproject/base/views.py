@@ -1,5 +1,4 @@
 import datetime
-from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
@@ -7,6 +6,7 @@ from .models import Friend, Message, Media, Shared, Like, Comment, Requests, Pro
 from django.db.models import Q
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from openai import OpenAI
 
 # TODO: make all only authenticated user usable only
 
@@ -81,9 +81,8 @@ def login(request):
         return render(request, 'login.html', {})
 
 def register(request):
-    print(request.user.is_authenticated, request.method)
+    print('Register')
     if request.user.is_authenticated is False and request.method == 'POST':
-        print('success')
         name = request.POST['name'].strip()
         surname = request.POST['surname'].strip()
         username = request.POST['username']
@@ -127,6 +126,7 @@ def register(request):
             else:
                 ProfileInfo.objects.create(user=user)
             user.save()
+            auth.login(request, user)
             return redirect('/')
     else:
         if request.user.is_authenticated:
@@ -158,12 +158,14 @@ def chat(request, room):
         friendship = Friend.objects.filter(user1=current_user, user2=current_recipient).last()
         friendship2 = Friend.objects.filter(user1=current_recipient,user2=current_user).last()
         print("friendship updated!")
-        friendship.last_message_date = datetime.datetime.now()
+        friendship.last_message_date = datetime.datetime.now() 
         friendship2.last_message_date = datetime.datetime.now()
         friendship2.save()
         friendship.save()
         return render(request, 'chat.html', {'room': room, 
-            'user': current_username, 'recipient': recipient, 'messages':messages, 'current_recipient': current_recipient})
+            'user': current_username, 'recipient': recipient, 'messages':messages, 'current_recipient': current_recipient,
+            'has_unread_message' : has_unread_message(request.user), 'has_unreplied_request': has_unreplied_request(request.user),
+            'friend_names': get_friend_names(request.user)})
     else:
         return redirect('/')
 
@@ -206,7 +208,8 @@ def friends_message_view(request):
                     messages.append(received_message)
         zipped = zip(friends, messages)
         print(friend_names)
-        return render(request, 'chat_view.html', {'user': current_user,'friends_messages': zipped, 'friend_names': friend_names})
+        return render(request, 'chat_view.html', {'user': current_user,'friends_messages': zipped, 
+            'friend_names': friend_names, 'has_unreplied_request': has_unreplied_request(current_user)})
     else:
         return redirect('/')
     
@@ -242,14 +245,19 @@ def requests(request):
             print(request.POST['command'])
             from_user = User.objects.get(username=request.POST['from_user'])
             if (request.POST['command'] == 'add'):
-                Friend.objects.create(user1=request.user, user2=from_user)
+                if Friend.objects.filter(user1=request.user).exists() is False:
+                    Friend.objects.create(user1=request.user, user2=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
+                if Friend.objects.filter(user2=request.user).exists() is False:
+                    Friend.objects.create(user2=request.user, user1=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))            
             else:
                Friend.objects.get(user1=from_user, user2=request.user).delete()
             Requests.objects.get(from_user=from_user).delete()
             return redirect('requests')
         else:
             request_db = Requests.objects.filter(to_user=request.user)
-            return render(request, 'requests.html', {"requests": request_db})
+            return render(request, 'requests.html', {"requests": request_db,
+                "has_unread_message": has_unread_message(request.user),
+                "friend_names": get_friend_names(request.user), "user": request.user})
     else:
         return redirect('/')
 
@@ -265,12 +273,18 @@ def profile(request, username):
             friendship1 = Friend.objects.filter(user1=current_user, user2=profile_user)
             friendship2 = Friend.objects.filter(user1=profile_user, user2=current_user)
             if request.POST.get('button_action') == 'add_friend':
-                Friend.objects.create(user1=current_user, user2=profile_user)
+                Friend.objects.create(user1=current_user, user2=profile_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
                 if Requests.objects.filter(from_user=current_user, to_user=profile_user).exists() is False:
                     Requests.objects.create(from_user=current_user, to_user=profile_user)
                 return redirect('profile', username)
             elif request.POST.get('button_action') == 'remove_friend':
                 print('removing friend from friendlist')
+                request1 = Requests.objects.filter(from_user=current_user, to_user=profile_user)
+                request2 = Requests.objects.filter(from_user=profile_user, to_user=current_user)
+                if request1.exists():
+                    request1.delete()
+                if request2.exists():
+                    request2.delete()
                 if friendship1.exists():
                     friendship1.first().delete()
                 if friendship2.exists():
@@ -304,7 +318,6 @@ def profile(request, username):
                     profile_user.email = email
                     profile_info.workplace = workplace
                     profile_info.address = address
-                    print(age)
                     if age != '':
                         profile_info.age = int(age)
                     else:
@@ -324,39 +337,47 @@ def profile(request, username):
                 friend = 2
             print('get in profile')
             return render(request, 'profile.html',
-            {'user': profile_user, 'current': current, 'friend': friend})
+            {'user': profile_user, 'current': current, 'friend': friend, 'current_user': current_user,
+                'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
+                'has_unreplied_request': has_unreplied_request(request.user)})
     return redirect('/')
-
+# Done
 def people(request):
     if request.user.is_authenticated:
-        peoples = User.objects.all()[:8]
+        peoples = User.objects.exclude(username=request.user.username)[:8]
         if request.method == 'POST':
             print('people', request.POST['command'])
             if request.POST['command'] == 'search':
-                peoples = User.objects.filter(username__startswith=request.POST['search_handle'])
+                peoples = User.objects.filter(username__startswith=request.POST['search_handle']).exclude(username=request.user.username)
             elif request.POST['command'] == 'add_friend':
                 other_user = User.objects.get(username=request.POST['user'])
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
-                    Friend.objects.create(user1=request.user, user2=other_user)
+                    Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
                 if Requests.objects.filter(from_user=request.user, to_user=other_user).exists() is False:
                     Requests.objects.create(from_user=request.user, to_user=other_user)
             elif request.POST['command'] == 'accept_friend':
                 other_user = User.objects.get(username=request.POST['user'])
                 if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
                     Requests.objects.filter(from_user=other_user, to_user=request.user).first().delete()
+                if Requests.objects.filter(from_user=request.user, to_user=other_user).exists():
+                    Requests.objects.filter(from_user=request.user, to_user=other_user).first().delete()
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
-                    Friend.objects.create(user1=request.user, user2=other_user)
+                    Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
             elif request.POST['command'] == 'delete_request':
                 # Deletes all relations they have!
                 other_user = User.objects.get(username=request.POST['user'])
-                if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
-                    Requests.objects.filter(from_user=other_user, to_user=request.user).first().delete()
-                if Requests.objects.filter(from_user=request.user, to_user=other_user).exists():
-                    Requests.objects.filter(from_user=request.user, to_user=other_user).first().delete()
-                if Friend.objects.filter(user1=request.user, user2=other_user).exists():
-                    Friend.objects.filter(user1=request.user, user2=other_user).first().delete()
-                if Friend.objects.filter(user1=other_user, user2=request.user).exists():
-                    Friend.objects.filter(user1=other_user, user2=request.user).first().delete()
+                request1 = Requests.objects.filter(from_user=other_user, to_user=request.user)
+                request2 = Requests.objects.filter(from_user=request.user, to_user=other_user)
+                friendship1 = Friend.objects.filter(user1=request.user, user2=other_user)
+                friendship2 = Friend.objects.filter(user1=other_user, user2=request.user)
+                if request1.exists():
+                    request1.delete()
+                if request2.exists():
+                    request2.delete()
+                if friendship1.exists():
+                    friendship1.delete()
+                if friendship2.exists():
+                    friendship2.delete()
             else:
                 other_user = User.objects.get(username=request.POST['user'])
                 if other_user.username < request.user.username:
@@ -365,12 +386,44 @@ def people(request):
                     return redirect('chat', (request.user.username + '-' + other_user.username))
             print('people rendering')
             friendship = get_relationships(request.user, peoples)
-            return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship)})
+            return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship),
+                'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
+                'has_unreplied_request': has_unreplied_request(request.user)})
         friendship = get_relationships(request.user, peoples)
-        return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship)})
+        return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship),
+                'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
+                'has_unreplied_request': has_unreplied_request(request.user), 'current_user': request.user})
     else:
         return redirect('/')
 
+
+# client = OpenAI(
+#     api_key="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"
+# )
+
+
+def chatGPT(request):
+    if request.user.is_authenticated:
+        if request.method == 'POST':
+            question = request.POST.get('question')
+            # stream = client.completions.create(
+            #     model="text-davinci-003",
+            #     prompt="How are you?",
+            # )
+            # print(stream.choices[0].message.content)
+            OpenAI().completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "user",
+                    "content": 'message'
+                }],
+            ).choices[0].message.content
+
+            return render(request, 'chatgpt.html', {'answer':'responses', 'user': request.user})
+        else:
+            return render(request, 'chatgpt.html', {'user': request.user})
+    else:
+        return redirect('/')
 
 # Helper functions:
 def collector(request, medias):
@@ -461,7 +514,6 @@ def has_unread_message(user):
         last_message = Message.objects.filter(sender=friend.user2, recipient=user)
         if last_message.exists():
             if last_message.order_by('timestamp').last().timestamp > friend.last_message_date:
-                print(last_message, friend)
                 return True
     return False
 

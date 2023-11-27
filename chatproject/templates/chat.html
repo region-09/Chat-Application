@@ -34,19 +34,25 @@
                                 <a href="/" id="home" class="nav-link border-hover py-3 text-white"><i class="fa fa-home" aria-hidden="true"> Home</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="/chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true"> Messages</i></a>
+                                <a href="/chatting" id="message" class="nav-link border-hover py-3 text-white"><i class="fa fa-envelope" aria-hidden="true" 
+                            	    id="message_icon"> Messages</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
+                                <a href="/people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
+                                <a href="/upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
                             <li class="nav-item">
-                                <a href="requests" id="requests" class="nav-link border-hover py-3 text-white active"><i class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% if has_unreplied_request == False %}
+                                    <a href="/requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" aria-hidden="true"> Requests</i></a>
+                                {% else %}
+                                <a href="/requests" id="requests" class="nav-link border-hover py-3 text-white active"><i id="request_icon" class="fa fa-user-plus" 
+                                    aria-hidden="true"> Requests<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle"></span></i></a>
+                                {% endif %}
                             </li>
                             <li class="nav-item">
-                                <a href="logout" id="sign-out" class="nav-link border-hover py-3 text-white">
+                                <a href="/logout" id="sign-out" class="nav-link border-hover py-3 text-white">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v192c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"/></svg> Sign out</a>
                             </li>
                         </ul>
@@ -66,7 +72,7 @@
 				<!-- <p></p> -->
 				{% for m in messages %}
 				{% if m.sender.username != user %}
-				<div class="d-flex flex-row justify-content-start">
+				<div class="d-flex flex-row justify-content-start" id="for_test">
 					<div class="overflow-hidden medium p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7; margin-right: 10px;">
 						<div>{{m.message}}<p class="message-time2">{{m.timestamp}}</p>
 						</div>
@@ -121,9 +127,8 @@
 		}
 
 		document.querySelector('#input').onkeyup = function (e) {
-			if (e.keyCode === 13 && e.shiftKey) { // enter, return 
-				// document.querySelector('#submit').click();
-				pasteIntoInput
+			if (e.keyCode === 13) { // enter, return 
+				document.querySelector('#submit').click();
 			}
 		};
 
@@ -153,26 +158,39 @@
 				scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
 			}
 			inputfield.value = "";
-			// // notification
-			const socket2 = new WebSocket('ws://'
+			// websocket notification
+			const socket = new WebSocket('ws://'
 			+ window.location.host
 			+ '/ws/notification/'
 			+ room + '/');
-			socket2.onmessage = (e) => {
-				// nothing to do!
+			socket.onmessage = (e) => {
+				// document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
 			}
-			socket2.send(JSON.stringify(
+			socket.send(JSON.stringify(
 				{
 					message: 'update'
 				}
 			))
 
-			socket2.onclose = (e) => {
+			socket.onclose = (e) => {
 				console.log("Socket closed!");
 			}
 			// notification end
 		}
-
+		// socket2 for request notifications:
+        const socket2 = new WebSocket('ws://'
+                + window.location.host
+                + '/ws/notification/'
+                + "{{user}}" + '/');
+        socket2.onmessage = (e) => {
+            console.log('received(friend request)! notify user!');
+            document.getElementById('request_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+        }
+        
+        socket2.onclose = (e) => {
+            console.log("Socket2 closed!");
+        }
+        // websocket listeners! end
 		window.onload = function(e) {
 			var scrollableDiv = document.getElementById("content");
 			scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
