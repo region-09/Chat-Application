@@ -143,7 +143,7 @@
                                         <div class="like p-2 cursor">
                                             <div class="row">
                                                 <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="clicked(event)"
+                                                    <a href="" onclick="clicked(event)" name="like*{{media.owner}}*{{media.reposter}}*{{date}}"
                                                         style="font-size: 1em; color: darkcyan;">
                                                         {% if like == 0 %}
                                                         <i class="far fa-thumbs-up me-2"> Like</i>
@@ -153,13 +153,13 @@
                                                     </a>
                                                 </div>
                                                 <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="comment(event)"
+                                                    <a href="" onclick="comment(event)"  name="comment*{{media.owner}}*{{media.reposter}}*{{date}}"
                                                         style="font-size: 1em; color: darkcyan;">
                                                         <i class="far fa-comment-dots me-2"> Comment</i>
                                                     </a>
                                                 </div>
                                                 <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="share(event)"
+                                                    <a href="" onclick="share(event)" name="share*{{media.owner}}*{{media.reposter}}*{{date}}"
                                                         style="font-size: 1em; color: darkcyan;">
                                                         {% if share == 0 %}
                                                         <i class="far fa-share-square"> Share</i>
@@ -179,7 +179,7 @@
                                             <input type="text" class="form-control"
                                                 name="{{media.owner}}*{{media.reposter}}*{{date}}"
                                                 placeholder="Enter your comment...">
-                                            <button class="btn btn-success"
+                                            <button class="btn btn-success" name="submit*{{media.owner}}*{{media.reposter}}*{{date}}"
                                                 onclick="submit_comment(event)">Comment</button>
                                         </div>
                                         <div class="mt-2">

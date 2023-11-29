@@ -216,7 +216,9 @@ def friends_message_view(request):
 def upload(request):
     if request.method == 'POST':
         user = request.user
-        description = request.POST['description_text']
+        description = ''
+        if 'description_text' in request.POST:
+            description = request.POST['description_text']
         if len(request.FILES) == 1:
             file = request.FILES['inputFile']
             if file.size > 100 * 1024 * 1024:
@@ -228,6 +230,7 @@ def upload(request):
                 print('image received!, description:', description)
                 Media.objects.create(owner=user, reposter=user, media=file, description=description, upload_date=datetime.datetime.now().replace(microsecond=0))
             else:
+                messages.info(request, 'Incorrect format!')
                 return render(request, 'upload.html', {'message': 'Incorrect format!'})
         elif len(description) != 0:
                 Media.objects.create(owner=user, reposter=user, description=description, upload_date=datetime.datetime.now().replace(microsecond=0))
