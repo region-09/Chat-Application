@@ -248,10 +248,10 @@ def requests(request):
             print(request.POST['command'])
             from_user = User.objects.get(username=request.POST['from_user'])
             if (request.POST['command'] == 'add'):
-                if Friend.objects.filter(user1=request.user).exists() is False:
+                if Friend.objects.filter(user1=request.user, user2=from_user).exists() is False:
                     Friend.objects.create(user1=request.user, user2=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
-                if Friend.objects.filter(user2=request.user).exists() is False:
-                    Friend.objects.create(user2=request.user, user1=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))            
+                if Friend.objects.filter(user1=from_user, user2=request.user).exists() is False:
+                    Friend.objects.create(user2=request.user, user1=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
             else:
                Friend.objects.get(user1=from_user, user2=request.user).delete()
             Requests.objects.get(from_user=from_user).delete()
@@ -356,16 +356,19 @@ def people(request):
                 other_user = User.objects.get(username=request.POST['user'])
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
                     Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
-                if Requests.objects.filter(from_user=request.user, to_user=other_user).exists() is False:
+                if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
+                    Requests.objects.filter(from_user=other_user, to_user=request.user).delete()
+                else:
                     Requests.objects.create(from_user=request.user, to_user=other_user)
             elif request.POST['command'] == 'accept_friend':
                 other_user = User.objects.get(username=request.POST['user'])
                 if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
-                    Requests.objects.filter(from_user=other_user, to_user=request.user).first().delete()
+                    Requests.objects.filter(from_user=other_user, to_user=request.user).delete()
                 if Requests.objects.filter(from_user=request.user, to_user=other_user).exists():
-                    Requests.objects.filter(from_user=request.user, to_user=other_user).first().delete()
+                    Requests.objects.filter(from_user=request.user, to_user=other_user).delete()
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
                     Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
+                print("current", datetime.datetime.now().replace(microsecond=0))
             elif request.POST['command'] == 'delete_request':
                 # Deletes all relations they have!
                 other_user = User.objects.get(username=request.POST['user'])
@@ -516,6 +519,7 @@ def has_unread_message(user):
     for friend in friends:
         last_message = Message.objects.filter(sender=friend.user2, recipient=user)
         if last_message.exists():
+            print("CHECK", last_message.order_by('timestamp').last().timestamp, friend.last_message_date, 'username', friend.user1)
             if last_message.order_by('timestamp').last().timestamp > friend.last_message_date:
                 return True
     return False

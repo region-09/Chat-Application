@@ -137,6 +137,7 @@
             socket.onmessage = (e) => {
                 console.log('received! notify user!');
                 document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+                location.reload();
             }
             
             socket.onclose = (e) => {
@@ -151,6 +152,7 @@
         socket2.onmessage = (e) => {
             console.log('received(friend request)! notify user!');
             document.getElementById('request_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+            location.reload();
         }
         
         socket2.onclose = (e) => {
@@ -216,8 +218,7 @@
                 },
                 success: function (data) {
                     console.log('Success! Clicked');
-
-                    $('#main').html($(data).find('#main').html());
+                    location.reload();
                 },
                 error: function (error) {
                     console.error('Error:', error);
@@ -243,7 +244,7 @@
                 },
                 success: function (data) {
                     console.log('Success! Clicked');
-                    $('#main').html($(data).find('#main').html());
+                    location.reload();
                 },
                 error: function (error) {
                     console.error('Error:', error);
@@ -268,7 +269,7 @@
                 },
                 success: function (data) {
                     console.log('Success! Clicked');
-                    $('#main').html($(data).find('#main').html());
+                    location.reload();
                 },
                 error: function (error) {
                     console.error('Error:', error);

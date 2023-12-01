@@ -65,6 +65,12 @@
             </div>
         </nav>
     </header>
+    <!-- IMAGE viewer -->
+    <div id="img-viewer">
+        <span class="close" onclick="close_model()">&times;</span>
+        <img class="modal-content" id="full-image" >
+    </div>
+    <!-- IMAGE viewer END-->
     <section style="background: cadetblue;">
         <div class="container py-5">
             {% for message in messages %}
@@ -78,7 +84,7 @@
                             {% csrf_token %}
                             <div class="card-body text-center">
                                 <img src="{{user.profileinfo.profile_image.url}}" alt="avatar"
-                                    class="rounded-circle img-fluid" style="width: 150px; height: 150px;">
+                                    class="rounded-circle img-fluid" style="width: 150px; height: 150px;" onclick="full_view(this);">
                                 <h5 class="my-3">{{user.first_name}} {{user.last_name}}</h5>
                                 <p class="text-muted mb-1">“A spoken word is not a sparrow. Once it flies out, you can't
                                     catch it.”</p>
@@ -264,6 +270,18 @@
             console.log("Socket2 closed!");
         }
         // websocket listeners! end
+
+        // Image View part
+        function full_view(ele){
+            let src=ele.src;
+            console.log(src);
+            document.querySelector("#img-viewer").querySelector("img").setAttribute("src",src);
+            document.querySelector("#img-viewer").style.display="block";
+        }
+        
+        function close_model(){
+            document.querySelector("#img-viewer").style.display="none";
+        }
     </script>
 </body>
 

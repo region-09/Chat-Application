@@ -64,6 +64,12 @@
             </div>
         </nav>
     </header>
+    <!-- IMAGE viewer -->
+    <div id="img-viewer">
+        <span class="close" onclick="close_model()">&times;</span>
+        <img class="modal-content" id="full-image" >
+    </div>
+    <!-- IMAGE viewer END-->
     <section ui-view="" autoscroll="false" ng-class="app.viewAnimation" class="ng-scope container ng-fadeInLeftShort"
         style=""><!-- uiView:  -->
         {% csrf_token %}
@@ -86,14 +92,14 @@
             <div class="container-lg ng-scope">
                 <div class="row">
                     <div class="col-md-12">
-                        <div class="card">
+                        <div class="card" style="margin: auto;">
                             <!-- Inner card-->
                             <!-- zip(media_parts, liked_by_user, comments, shared, date) -->
                             {% for media, like, comments, share, date in medias %}
                             <div class="card-body">
                                 <div>{{formatted_date}}</div>
-                                <div class="card" style="border: 3px solid black;"  id="{{media.owner}}*{{media.reposter}}*{{date}}">
-                                    <div class="card-heading" style="border-bottom: 3px solid black;">
+                                <div class="card" style="border: 3px solid black; background-color: #D3D3D3;"  id="{{media.owner}}*{{media.reposter}}*{{date}}">
+                                    <div class="card-heading" style="border-bottom: 3px solid black; background-color: tomato;">
                                         <div class="media m0">
                                             <div class="media-left">
                                                 <a href="#">
@@ -106,7 +112,7 @@
                                                     {% endif %}
                                                 </a>
                                             </div>
-                                            <div class="media-body media-middle pt-sm">
+                                            <div class="media-body media-middle pt-sm" style="color: beige; font-size: 1.1em;">
                                                 {% if media.owner.username != media.reposter.username %}
                                                 <p class="media-heading m0 text-bold">{{media.reposter.username}}
                                                     [repost from:{{media.owner.username}}]</p>
@@ -114,37 +120,38 @@
                                                 <p class="media-heading m0 text-bold">{{media.owner.username}}</p>
                                                 {% endif %}
                                                 <small class="text-muted"><em
-                                                        class="ion-earth text-muted mr-sm"></em><span>{{media.upload_date}}</span></small>
+                                                        class="ion-earth text-muted mr-sm"></em><span style="color: beige; font-size: 1.1em;">{{media.upload_date}}</span></small>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="cont" style="margin-top: 5px;">
                                         {% if media.media != "" %}
-                                        {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
-                                        <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive">
-                                        {% endif %}
+                                            {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
+                                                <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive"
+                                                onclick="full_view(this);">
+                                            {% endif %}
                                         {% endif %}
                                         {% if media.media != ""%}
-                                        {% if media.media.url|slice:"-4:" == ".mp4" or media.media.url|slice:"-4:" == ".avi" or media.media.url|slice:"-4:" == ".mov" %}
-                                        <video class="w-100" controls>
-                                            <source
-                                                src="http://webprogramozas.inf.elte.hu/students/fx29ql/video1261793259.mp4"
-                                                type="video/mp4" />
-                                        </video>
-                                        {% endif %}
+                                            {% if media.media.url|slice:"-4:" == ".mp4" or media.media.url|slice:"-4:" == ".avi" or media.media.url|slice:"-4:" == ".mov" %}
+                                                <video class="w-100" controls>
+                                                    <source
+                                                    src="{{media.media.url}}"
+                                                    type="video/mp4" />
+                                                </video>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                     <div>
-                                    <div class="card-item-text bg-transparent" style="border-top: 3px solid black;border-bottom: 3px solid black;
+                                    <div class="card-item-text" style=" background-color: #99FF99; border-bottom: 3px solid black; border-top: 2px solid black;
                                     margin-top: 5px; text-align: center;">
-                                        <p style="color: black; font-size: 18px;">{{media.description}}</p>
+                                        <p style="color: black; font-size: 18px;;">{{media.description}}</p>
                                     </div>
-                                    <div class="card-footer">
+                                    <div class="card-footer" style="background-color: lightpink;">
                                         <div class="like p-2 cursor">
                                             <div class="row">
                                                 <div class="col center-block" style="text-align: center;">
                                                     <a href="" onclick="clicked(event)" name="like*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                        style="font-size: 1em; color: darkcyan;">
+                                                    style="font-size: 1.1em; color: darkblue;">
                                                         {% if like == 0 %}
                                                         <i class="far fa-thumbs-up me-2"> Like</i>
                                                         {% else %}
@@ -154,13 +161,13 @@
                                                 </div>
                                                 <div class="col center-block" style="text-align: center;">
                                                     <a href="" onclick="comment(event)"  name="comment*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                        style="font-size: 1em; color: darkcyan;">
+                                                    style="font-size: 1.1em; color: darkblue;">
                                                         <i class="far fa-comment-dots me-2"> Comment</i>
                                                     </a>
                                                 </div>
                                                 <div class="col center-block" style="text-align: center;">
                                                     <a href="" onclick="share(event)" name="share*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                        style="font-size: 1em; color: darkcyan;">
+                                                    style="font-size: 1.1em; color: darkblue;">
                                                         {% if share == 0 %}
                                                         <i class="far fa-share-square"> Share</i>
                                                         {% else %}
@@ -190,11 +197,11 @@
                                                 <div class="w-100">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <div class="d-flex flex-row align-items-center">
-                                                            <a href="/profile/{{comment.user.username}}" style="text-decoration: none; margin-left: 5px;">
+                                                            <a href="/profile/{{comment.user.username}}" style="text-decoration: none;margin-left: 10px;">
                                                                 <span class="mr-2" style="color: blue;">{{comment.user.username}}</span>
                                                             </a>
                                                         </div>
-                                                        <small>{{comment.comment_date}}</small>
+                                                        <small style="margin-left: 10px;">{{comment.comment_date}}</small>
                                                     </div>
 
                                                     <p class="text-justify comment-text mb-4" style="color: black;">
@@ -202,6 +209,7 @@
                                                     </p>
                                                 </div>
                                             </div>
+                                            <hr style="color: black;">
                                             {% endfor %}
                                         </div>
                                     </div>
@@ -435,6 +443,17 @@
             }
             parent.children[1].value = "";
 
+        }
+        // for image views!
+        function full_view(ele){
+            let src=ele.src;
+            console.log(src);
+            document.querySelector("#img-viewer").querySelector("img").setAttribute("src",src);
+            document.querySelector("#img-viewer").style.display="block";
+        }
+        
+        function close_model(){
+            document.querySelector("#img-viewer").style.display="none";
         }
     </script>
     <style>

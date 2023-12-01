@@ -61,38 +61,40 @@
             </div>
         </nav>
     </header>
-	<div style="position: relative; z-index: 1; margin-top: 280px;">
-		<div class="card" id="chat2">
-			<div class="card-header">
-				<h5 class="mb-0">Chat with {{current_recipient.last_name}} {{current_recipient.first_name}}</h5>
-			</div>
-			<div id="content" class="chatmessages overflow-y-auto" style="height: 65vh; left: 10%; top: 15%;
-			 background-image: url(https://us.123rf.com/450wm/fillvector/fillvector2307/fillvector230700782/208235083-green-line-web-camera-icon-isolated-seamless-pattern-on-blue-background-chat-camera-webcam-icon.jpg?ver=6);">
-				<!-- contents come here! -->
-				<!-- <p></p> -->
-				{% for m in messages %}
-				{% if m.sender.username != user %}
-				<div class="d-flex flex-row justify-content-start" id="for_test">
-					<div class="overflow-hidden medium p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7; margin-right: 10px;">
-						<div>{{m.message}}<p class="message-time2">{{m.timestamp}}</p>
+	<div style="position: relative; z-index: 1; margin-top: 290px;">
+		<div class="container">
+			<div class="card" id="chat2">
+				<div class="card-header">
+					<h5 class="mb-0">Chat with {{current_recipient.last_name}} {{current_recipient.first_name}}</h5>
+				</div>
+				<div id="content" class="chatmessages overflow-y-auto" style="max-width: 1000px; height: 65vh; padding-top: 10px;
+				background-image: url(https://images.pexels.com/photos/949587/pexels-photo-949587.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1);">
+					<!-- contents come here! -->
+					<!-- <p></p> -->
+					{% for m in messages %}
+					{% if m.sender.username != user %}
+					<div class="d-flex flex-row justify-content-start" id="for_test">
+						<div class="overflow-hidden medium p-2 ms-3 mb-1 text-black rounded-3" style="background-color: #f5f6f7; margin-right: 10px;  margin-left: 10px;">
+							<div>{{m.message|linebreaksbr|safe }}<p class="message-time2">{{m.timestamp}}</p>
+							</div>
 						</div>
 					</div>
-				</div>
-				{% else %}
-				<div class="d-flex flex-row justify-content-end">
-					<div class="overflow-hidden medium p-2 me-3 mb-1 text-white rounded-3" style="background-color:#25D366; margin-left: 10px;">
-						<div>{{m.message}} <p class="message-time">{{m.timestamp}}</p>
+					{% else %}
+					<div class="d-flex flex-row justify-content-end">
+						<div class="overflow-hidden medium p-2 ms-3 mb-1 text-white rounded-3" style="background-color:#25D366; margin-left: 10px; margin-right: 10px;">
+							<div><p>{{m.message|linebreaksbr|safe}}</p> <p class="message-time">{{m.timestamp}}</p>
+							</div>
 						</div>
 					</div>
+					{% endif %}
+					{% endfor %}
 				</div>
-				{% endif %}
-				{% endfor %}
-			</div>
-			<div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
-				<input type="text" name="text_input" id="input" class="form-control" placeholder="Message.."/>
-				<button class="btn btn-warning" type="submit" id="submit" style="padding-top: .55rem;">
-					Send
-				</button>
+				<div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
+					<textarea type="text" name="text_input" id="input" class="form-control" placeholder="Message.."></textarea>
+					<button class="btn btn-warning" type="submit" id="submit" style="padding-top: .55rem;">
+						Send
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -111,10 +113,11 @@
 			const now = new Date();
 			sender = JSON.parse(e.data).sender;
 			result = JSON.parse(e.data).message;
+			const formattedMessage = result.replace(/\n/g, '<br>');
 			document.getElementById("content").innerHTML +=
 				`<div class="d-flex flex-row justify-content-start">
-				<div class="medium p-2 ms-3 mb-1 rounded-3" style="background-color: #f5f6f7;">
-					<div>` + result + `<p class="message-time2">
+				<div class="overflow-hidden medium p-2 ms-3 mb-1 text-black rounded-3" style="background-color: #f5f6f7; margin-right: 10px;  margin-left: 10px;">
+					<div>` + formattedMessage + `<p class="message-time2">
 	${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</p></div>
 				</div>
 			</div>`;
@@ -126,29 +129,47 @@
 			console.log("Socket closed!");
 		}
 
-		document.querySelector('#input').onkeyup = function (e) {
-			if (e.keyCode === 13) { // enter, return 
-				document.querySelector('#submit').click();
-			}
-		};
+		// websocket notification
+		const socket3 = new WebSocket('ws://'
+			+ window.location.host
+			+ '/ws/notification/'
+			+ room + '/');
+		socket3.onmessage = (e) => {
+			// document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
+		}
+		socket3.onclose = (e) => {
+			console.log("Socket3 closed!");
+		}
+		// notification end
+
+		// document.querySelector('#input').onkeyup = function (e) {
+		// 	if (e.keyCode === 13) { // enter, return 
+		// 		document.querySelector('#submit').click();
+		// 	}
+		// };
 
 		document.querySelector("#submit").onclick = (e) => {
 			inputfield = document.querySelector("#input");
 			let messa = inputfield.value;
-
 			if ((messa.trim()).length != 0) {
 				socket.send(JSON.stringify(
 					{
 						sender: user,
 						recipient: recipient,
-						message: messa
+						message: messa,
 					}
-				))
+				));
+				socket3.send(JSON.stringify(
+					{
+						message: 'update'
+					}
+				));
 				const now = new Date();
+				const formattedMessage = messa.replace(/\n/g, '<br>');
 				document.getElementById("content").innerHTML +=
 				`<div class="d-flex flex-row justify-content-end">
-					<div class="medium p-2 me-3 mb-1 text-white rounded-3" style="background-color:#25D366">
-						<div>` + messa + `<p class="message-time">
+					<div class="overflow-hidden medium p-2 ms-3 mb-1 text-white rounded-3" style="background-color:#25D366; margin-left: 10px; margin-right: 10px;">
+						<div>` + formattedMessage + `<p class="message-time">
 						${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</p>
 						</div>
 					</div>
@@ -158,24 +179,6 @@
 				scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
 			}
 			inputfield.value = "";
-			// websocket notification
-			const socket = new WebSocket('ws://'
-			+ window.location.host
-			+ '/ws/notification/'
-			+ room + '/');
-			socket.onmessage = (e) => {
-				// document.getElementById('message_icon').innerHTML += '<span class="position-absolute top-0 start-95 translate-middle p-2 bg-danger border border-light rounded-circle">';
-			}
-			socket.send(JSON.stringify(
-				{
-					message: 'update'
-				}
-			))
-
-			socket.onclose = (e) => {
-				console.log("Socket closed!");
-			}
-			// notification end
 		}
 		// socket2 for request notifications:
         const socket2 = new WebSocket('ws://'

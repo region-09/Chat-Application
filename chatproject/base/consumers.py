@@ -4,6 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 from . models import User, Message, Friend
 from django.db.models import Q
+import re
 
 class Chat(AsyncWebsocketConsumer):
     async def connect(self):
@@ -26,7 +27,7 @@ class Chat(AsyncWebsocketConsumer):
 
 
         await self.save_message(sender, recipient, message)
-
+        
         await self.channel_layer.group_send(
             room,
             {
@@ -38,14 +39,15 @@ class Chat(AsyncWebsocketConsumer):
 
     async def send_message(self, event):
         # Send the received message to the WebSocket
-        message = event['message']
-        user = self.scope['user'].username
-        sender = event['sender']
-        if sender != user:
-            await self.send(text_data=json.dumps(
-                {'sender': sender, 'message': message}))
-        else:
-            pass
+        if len(event) == 3:
+            message = event['message']
+            user = self.scope['user'].username
+            sender = event['sender']
+            if sender != user:
+                await self.send(text_data=json.dumps(
+                    {'sender': sender, 'message': message}))
+            else:
+                pass
     
     @sync_to_async
     def save_message(self, sender, recipient, message):
@@ -80,10 +82,11 @@ class Notification(AsyncWebsocketConsumer):
 
     async def send_message(self, event):
         # Send the received message to the WebSocket
-        user = self.scope['user'].username
-        sender = event['sender']
-        if sender != user:
-            await self.send(text_data=json.dumps(
-                {'sender': sender, 'message': 'Received message'}))
-        else:
-            pass
+        if len(event) == 2:
+            user = self.scope['user'].username
+            sender = event['sender']
+            if sender != user:
+                await self.send(text_data=json.dumps(
+                    {'sender': sender, 'message': 'Received message'}))
+            else:
+                pass
