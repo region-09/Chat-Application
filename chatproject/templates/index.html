@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
 </head>
 
-<body style="background: #3A3E4B;">
+<body class="d-flex flex-column min-vh-100" style="background: #3A3E4B;">
     <h1 class="d-none d-lg-block" 
     style="text-align: center; color: #FF9138; margin-top: 5px; margin-bottom: -30px">Social Network</h1>
     <header>
@@ -44,6 +44,9 @@
                                 <a href="people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
                             </li>
                             <li class="nav-item">
+                                <a href="/profile/{{user}}" id="profile" class="nav-link border-hover py-3 text-white"><i class="fas fa-user"> Profile</i></a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
                             <li class="nav-item">
@@ -55,7 +58,7 @@
                                 {% endif %}
                             </li>
                             <li class="nav-item">
-                                <a href="logout" id="sign-out" class="nav-link border-hover py-3 text-white">
+                                <a href="/logout" id="sign-out" class="nav-link border-hover py-3 text-white">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512"><path d="M497 273L329 441c-15 15-41 4.5-41-17v-96H152c-13.3 0-24-10.7-24-24v-96c0-13.3 10.7-24 24-24h136V88c0-21.4 25.9-32 41-17l168 168c9.3 9.4 9.3 24.6 0 34zM192 436v-40c0-6.6-5.4-12-12-12H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h84c6.6 0 12-5.4 12-12V76c0-6.6-5.4-12-12-12H96c-53 0-96 43-96 96v192c0 53 43 96 96 96h84c6.6 0 12-5.4 12-12z"/></svg> Sign out</a>
                             </li>
                         </ul>
@@ -70,158 +73,195 @@
         <img class="modal-content" id="full-image" >
     </div>
     <!-- IMAGE viewer END-->
-    <section ui-view="" autoscroll="false" ng-class="app.viewAnimation" class="ng-scope container ng-fadeInLeftShort"
-        style=""><!-- uiView:  -->
-        {% csrf_token %}
-        <div ui-view="" class="ng-fadeInLeftShort ng-scope">
-            <div class="container-overlap bg-indigo-500 ng-scope">
-                <div class="media m0 pv">
-                    <div class="media-left">
-                        <a href="#">
-                            <img src="{{user.profileinfo.profile_image.url}}" width="80" height="80" alt="User"
-                                class="rounded-circle">
-                        </a>
-                    </div>
-                    <div class="media-body media-middle">
-                        <h4 class="media-heading text-white">{{user.last_name}} {{user.first_name}}</h4>
-                        <span class="text-white">{{user.first_name}} is writing his diploma!!!!.
-                        </span>
+    <div class="container">
+        <section ui-view="" autoscroll="false" ng-class="app.viewAnimation" class="ng-scope container ng-fadeInLeftShort"
+            style=""><!-- uiView:  -->
+            {% csrf_token %}
+            <div ui-view="" class="ng-fadeInLeftShort ng-scope">
+                <div class="container-overlap ng-scope"
+                style="border-radius: 25px;margin-bottom: 50px; text-align: center;">
+                    <div class="media m0 pv">
+                        <div class="media-center">
+                            <a href="#">
+                                {% if user.profileinfo.profile_image == "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"%}
+                                    <img src="{{user.profileinfo.profile_image}}" width="80" height="80" alt="User"
+                                    class="rounded-circle">
+                                {% else %}
+                                    <img src="{{user.profileinfo.profile_image.url}}" width="80" height="80" alt="User"
+                                    class="rounded-circle">
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="media-body media-middle text-white">
+                            <h3 class="media-heading">{{user.last_name}} {{user.first_name}}</h3>
+                            <span>Welcome! We are happy to see you again! .
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="container-lg ng-scope">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card" style="margin: auto;">
-                            <!-- Inner card-->
-                            <!-- zip(media_parts, liked_by_user, comments, shared, date) -->
-                            {% for media, like, comments, share, date in medias %}
-                            <div class="card-body">
-                                <div>{{formatted_date}}</div>
-                                <div class="card" style="border: 3px solid black; background-color: #D3D3D3;"  id="{{media.owner}}*{{media.reposter}}*{{date}}">
-                                    <div class="card-heading" style="border-bottom: 3px solid black; background-color: tomato;">
-                                        <div class="media m0">
-                                            <div class="media-left">
-                                                <a href="#">
+                <div class="container-lg ng-scope">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card" style="margin: auto;">
+                                <!-- Inner card-->
+                                <!-- zip(media_parts, liked_by_user, comments, shared, date) -->
+                                {% for media, like, comments, share, date in medias %}
+                                <div class="card-body">
+                                    <div>{{formatted_date}}</div>
+                                    <div class="card" style="border: 3px solid black; background-color: #D3D3D3;"  id="{{media.owner}}*{{media.reposter}}*{{date}}">
+                                        <div class="card-heading" style="border-bottom: 3px solid black; background-color: lightslategrey;">
+                                            <div class="media m0">
+                                                <div class="media-left">
+                                                    <a href="#">
+                                                        <img src="{{media.reposter.profileinfo.profile_image.url}}"
+                                                            width="50" height="50" alt="User" class="rounded-circle">
+                                                    </a>
+                                                </div>
+                                                <div class="media-body media-middle pt-sm" style="color: beige; font-size: 1.1em;">
                                                     {% if media.owner.username != media.reposter.username %}
-                                                    <img src="{{media.reposter.profileinfo.profile_image.url}}"
-                                                        width="50" height="50" alt="User" class="rounded-circle">
+                                                    <p class="media-heading m0 text-bold">{{media.reposter.username}}
+                                                        [repost from:{{media.owner.username}}]</p>
                                                     {% else %}
-                                                    <img src="{{media.owner.profileinfo.profile_image.url}}" width="50"
-                                                        height="50" alt="User" class="rounded-circle">
+                                                    <p class="media-heading m0 text-bold">{{media.owner.username}}</p>
                                                     {% endif %}
-                                                </a>
+                                                    <small class="text-muted"><em
+                                                            class="ion-earth text-muted mr-sm"></em><span style="color: beige; font-size: 1.1em;">{{media.upload_date}}</span></small>
+                                                </div>
                                             </div>
-                                            <div class="media-body media-middle pt-sm" style="color: beige; font-size: 1.1em;">
-                                                {% if media.owner.username != media.reposter.username %}
-                                                <p class="media-heading m0 text-bold">{{media.reposter.username}}
-                                                    [repost from:{{media.owner.username}}]</p>
-                                                {% else %}
-                                                <p class="media-heading m0 text-bold">{{media.owner.username}}</p>
+                                        </div>
+                                        <div class="card-item-text" style=" background-color: whitesmoke; margin-bottom: 5px;">
+                                            <p style="color: black; font-size: 18px; margin: 15px;">{{media.description|linebreaksbr|safe }}</p>
+                                        </div>
+                                        <div class="cont" style="margin-top: 5px;">
+                                            {% if media.media != "" %}
+                                                {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
+                                                    <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive"
+                                                    onclick="full_view(this);">
                                                 {% endif %}
-                                                <small class="text-muted"><em
-                                                        class="ion-earth text-muted mr-sm"></em><span style="color: beige; font-size: 1.1em;">{{media.upload_date}}</span></small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="cont" style="margin-top: 5px;">
-                                        {% if media.media != "" %}
-                                            {% if media.media.url|slice:"-4:" == ".png" or media.media.url|slice:"-4:" == ".jpg" or media.media.url|slice:"-4:" == ".jpeg" %}
-                                                <img src="{{media.media.url}}" alt="MaterialImg" class="fw img-responsive"
-                                                onclick="full_view(this);">
                                             {% endif %}
-                                        {% endif %}
-                                        {% if media.media != ""%}
-                                            {% if media.media.url|slice:"-4:" == ".mp4" or media.media.url|slice:"-4:" == ".avi" or media.media.url|slice:"-4:" == ".mov" %}
-                                                <video class="w-100" controls>
-                                                    <source
-                                                    src="{{media.media.url}}"
-                                                    type="video/mp4" />
-                                                </video>
+                                            {% if media.media != ""%}
+                                                {% if media.media.url|slice:"-4:" == ".mp4" or media.media.url|slice:"-4:" == ".avi" or media.media.url|slice:"-4:" == ".mov" %}
+                                                    <video class="w-100" controls>
+                                                        <source
+                                                        src="{{media.media.url}}"
+                                                        type="video/mp4" />
+                                                    </video>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                    <div class="card-item-text" style=" background-color: #99FF99; border-bottom: 3px solid black; border-top: 2px solid black;
-                                    margin-top: 5px; text-align: center;">
-                                        <p style="color: black; font-size: 18px;;">{{media.description}}</p>
-                                    </div>
-                                    <div class="card-footer" style="background-color: lightpink;">
-                                        <div class="like p-2 cursor">
-                                            <div class="row">
-                                                <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="clicked(event)" name="like*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                    style="font-size: 1.1em; color: darkblue;">
-                                                        {% if like == 0 %}
-                                                        <i class="far fa-thumbs-up me-2"> Like</i>
-                                                        {% else %}
-                                                        <i class="fas fa-thumbs-up me-2"> Like</i>
-                                                        {% endif %}
-                                                    </a>
-                                                </div>
-                                                <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="comment(event)"  name="comment*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                    style="font-size: 1.1em; color: darkblue;">
-                                                        <i class="far fa-comment-dots me-2"> Comment</i>
-                                                    </a>
-                                                </div>
-                                                <div class="col center-block" style="text-align: center;">
-                                                    <a href="" onclick="share(event)" name="share*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                    style="font-size: 1.1em; color: darkblue;">
-                                                        {% if share == 0 %}
-                                                        <i class="far fa-share-square"> Share</i>
-                                                        {% else %}
-                                                        <i class="fas fa-share-square"> Share</i>
-                                                        {% endif %}
-                                                    </a>
-                                                </div>
-                                            </div>
                                         </div>
-                                    </div>
-                                    </div>
-                                    <div class="container" style="max-height: 200px; overflow: auto; display: none;">
-                                        <div class="mt-3 d-flex flex-row align-items-center p-3 form-color">
-                                            <img src="{{user.profileinfo.profile_image.url}}" width="30"
-                                                class="rounded-circle mr-2">
-                                            <input type="text" class="form-control"
-                                                name="{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                placeholder="Enter your comment...">
-                                            <button class="btn btn-success" name="submit*{{media.owner}}*{{media.reposter}}*{{date}}"
-                                                onclick="submit_comment(event)">Comment</button>
-                                        </div>
-                                        <div class="mt-2">
-                                            {% for comment in comments %}
-                                            <div class="d-flex flex-row p-3">
-                                                <img src="{{comment.user.profileinfo.profile_image.url}}" width="30" height="30"
-                                                    class="rounded-circle mr-3">
-                                                <div class="w-100">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div class="d-flex flex-row align-items-center">
-                                                            <a href="/profile/{{comment.user.username}}" style="text-decoration: none;margin-left: 10px;">
-                                                                <span class="mr-2" style="color: blue;">{{comment.user.username}}</span>
-                                                            </a>
-                                                        </div>
-                                                        <small style="margin-left: 10px;">{{comment.comment_date}}</small>
+                                        <div>
+                                        <div class="card-footer" style="background-color: lightpink; margin-top: 5px;">
+                                            <div class="like p-2 cursor">
+                                                <div class="row">
+                                                    <div class="col center-block" style="text-align: center;">
+                                                        <a href="" onclick="clicked(event)" name="like*{{media.owner}}*{{media.reposter}}*{{date}}"
+                                                        style="font-size: 1.1em; color: darkblue;">
+                                                            {% if like == 0 %}
+                                                            <i class="far fa-thumbs-up me-2"> Like</i>
+                                                            {% else %}
+                                                            <i class="fas fa-thumbs-up me-2"> Like</i>
+                                                            {% endif %}
+                                                        </a>
                                                     </div>
-
-                                                    <p class="text-justify comment-text mb-4" style="color: black;">
-                                                        {{comment.comment}}
-                                                    </p>
+                                                    <div class="col center-block" style="text-align: center;">
+                                                        <a href="" onclick="comment(event)"  name="comment*{{media.owner}}*{{media.reposter}}*{{date}}"
+                                                        style="font-size: 1.1em; color: darkblue;">
+                                                            <i class="far fa-comment-dots me-2"> Comment</i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="col center-block" style="text-align: center;">
+                                                        <a href="" onclick="share(event)" name="share*{{media.owner}}*{{media.reposter}}*{{date}}"
+                                                        style="font-size: 1.1em; color: darkblue;">
+                                                            {% if share == 0 %}
+                                                            <i class="far fa-share-square"> Share</i>
+                                                            {% else %}
+                                                            <i class="fas fa-share-square"> Share</i>
+                                                            {% endif %}
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <hr style="color: black;">
-                                            {% endfor %}
+                                        </div>
+                                        </div>
+                                        <div class="container" style="max-height: 200px; overflow: auto; display: none;">
+                                            <div class="mt-3 d-flex flex-row align-items-center p-3 form-color">
+                                                <img src="{{user.profileinfo.profile_image.url}}" width="30"
+                                                    class="rounded-circle mr-2">
+                                                <textarea type="text" class="form-control"
+                                                    name="{{media.owner}}*{{media.reposter}}*{{date}}"
+                                                    placeholder="Enter your comment..." style="font-size: 1.2em;"></textarea>
+                                                <button class="btn btn-success" name="submit*{{media.owner}}*{{media.reposter}}*{{date}}"
+                                                    onclick="submit_comment(event)" style="height: 60px; font-size: 1.2em;">Comment</button>
+                                            </div>
+                                            <div class="mt-2">
+                                                {% for comment in comments %}
+                                                <div class="d-flex flex-row p-3">
+                                                    <img src="{{comment.user.profileinfo.profile_image.url}}" width="30" height="30"
+                                                        class="rounded-circle mr-3">
+                                                    <div class="w-100">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div class="d-flex flex-row align-items-center">
+                                                                <a href="/profile/{{comment.user.username}}" style="text-decoration: none;margin-left: 10px;">
+                                                                    <span class="mr-2" style="color: blue;">{{comment.user.username}}</span>
+                                                                </a>
+                                                            </div>
+                                                            <small style="margin-left: 10px;">{{comment.comment_date}}</small>
+                                                        </div>
+
+                                                        <p class="text-justify comment-text mb-4" style="color: black;">
+                                                            {{comment.comment|linebreaksbr|safe }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <hr style="color: black; margin-top: -10px;">
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                     </div>
+                                    <!-- inner card end  -->
                                 </div>
-                                <!-- inner card end  -->
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
-    </section>
+        </section>
+    </div>
+    <footer id="foot" class="bg-dark mt-auto" style="color: aliceblue; text-align: center;">
+        <div class="container" style="padding-top: 10px;">
+            <h2>Contact details! </h2>
+            <div class="row" style="padding: 15px;">
+                <section class="col">
+                    <div>
+                        <a href="https://github.com/region-09" class="icon-github" style="text-decoration: none;">
+                            <i class="fab fa-github"></i>
+                            Github
+                        </a>
+                    </div>
+                </section>
+                <section class="col">
+                    <div>
+                        <a href="mailto:almazruslanov0195@gmail.com" class="icon-email" style="text-decoration: none;">
+                            <i class="fab fa-google"></i>
+                            Gmail
+                        </a>
+                    </div>
+                </section>
+                <section class="col">
+                    <div>
+                        <a href="https://www.linkedin.com/in/almaz-ruslanov-b95336215" class="icon-linkedin" style="text-decoration: none;">
+                            <i class="fab fa-linkedin-in"></i>
+                            LinkedIn
+                        </a>
+                    </div>
+                </section>
+            </div>
+            <div id="lowest" style="text-align: center;">
+                <p>Feel free to contact me by any of the above options.</p>
+            </div>
+        </div>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script>
@@ -265,14 +305,14 @@
         // websocket listeners! end
         function clicked(event) {
             event.preventDefault();
-            console.log(event.target);
+            // console.log(event.target);
             let el = event.target;
             if (el.tagName == 'A') {
                 el = el.children[0];
             }
             const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
 
-            console.log(p);
+            // console.log(p);
             var csrfToken = $('[name=csrfmiddlewaretoken]').val();
             if (el.classList.contains('far')) {
                 el.classList.remove('far');
@@ -339,7 +379,7 @@
             }
             const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
 
-            console.log(p.id);
+            // console.log(p.id);
 
             const m = document.getElementById(p.id);
 
@@ -352,7 +392,7 @@
         }
         function share(event) {
             event.preventDefault();
-            console.log(event.target);
+            // console.log(event.target);
             let el = event.target;
             if (el.tagName == 'A') {
                 el = el.children[0];
@@ -362,7 +402,7 @@
                 el.classList.add('fas');
 
                 const p = el.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode;
-                console.log(p.id);
+                // console.log(p.id);
 
                 var csrfToken = $('[name=csrfmiddlewaretoken]').val();
 
@@ -378,7 +418,7 @@
                         command: "share",
                     },
                     success: function (data) {
-                        console.log('Success!');
+                        // console.log('Success!');
                         // Add logic to update UI if needed
                         // For example, change the like button appearance or count
                     },
@@ -389,7 +429,7 @@
             }
         }
         function submit_comment(event) {
-            console.log("process!");
+            // console.log("process!");
             // parent = div before comment input, comment button!
             const parent = event.target.parentNode;
             const name = parent.name;
@@ -398,7 +438,7 @@
             const now = new Date();
             const comment_to_put = parent.parentNode.children[1];
 
-            console.log(parent.children[1].name);
+            // console.log(parent.children[1].name);
             if (input_value.trim().length != 0) {
                 // append div of comments:
                 comment_to_put.innerHTML =
@@ -407,14 +447,14 @@
                         class="rounded-circle mr-3">
                     <div class="w-100">
                         <div class="d-flex justify-content-between align-items-center">
-                            <div class="d-flex flex-row align-items-center">
-                                <span class="mr-2">{{user}}</span>
-                            </div>
+                            <a href="/profile/{{user}}" style="text-decoration: none; margin-left: 10px;">
+                                <span class="mr-2" style="color: blue;">{{user}}</span>
+                            </a>
                             <small>${now.getFullYear()}.${now.getMonth() < 10 ? '0' + (now.getMonth() + 1) : (now.getMonth() + 1)}.${now.getDate() < 10 ? '0' + now.getDate() : now.getDate()}.${now.getHours()}:${now.getMinutes()}</small>
                         </div>
                         
-                        <p class="text-justify comment-text mb-4">
-                            ${input_value.trim()}
+                        <p class="text-justify comment-text mb-4" style="color: black;">
+                            ${input_value.trim().replace(/\n/g, '<br>')}
                         </p>
                     </div>
                 </div>` + comment_to_put.innerHTML;
@@ -447,7 +487,7 @@
         // for image views!
         function full_view(ele){
             let src=ele.src;
-            console.log(src);
+            // console.log(src);
             document.querySelector("#img-viewer").querySelector("img").setAttribute("src",src);
             document.querySelector("#img-viewer").style.display="block";
         }
@@ -456,8 +496,6 @@
             document.querySelector("#img-viewer").style.display="none";
         }
     </script>
-    <style>
-    </style>
 </body>
 
 </html>

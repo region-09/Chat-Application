@@ -6,7 +6,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Live Calculator</title>
+	<title>Chat!!!</title>
 	<link rel="stylesheet" href="{% static 'style.css' %}">
 	<link rel="stylesheet" href="{% static 'index.css' %}">
     <link rel="stylesheet" href="{% static 'requests.css' %}">
@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
 </head>
 
-<body style="background: #3A3E4B; color: white;">
+<body  class="d-flex flex-column min-vh-100" style="background: #3A3E4B; color: white;">
     <header>
         <h1 class="d-none d-lg-block" 
         style="text-align: center; color: #FF9138; margin-bottom: -40px;">Social Network</h1>
@@ -40,6 +40,9 @@
                             <li class="nav-item">
                                 <a href="/people" id="search" class="nav-link border-hover py-3 text-white"><i class="fa fa-search" aria-hidden="true"> Search</i></a>
                             </li>
+							<li class="nav-item">
+                                <a href="/profile/{{user}}" id="profile" class="nav-link border-hover py-3 text-white"><i class="fas fa-user"> Profile</i></a>
+                            </li>
                             <li class="nav-item">
                                 <a href="/upload" id="publish" class="nav-link border-hover py-3 text-white"><i class="fa fa-upload" aria-hidden="true"> Publish</i></a>
                             </li>
@@ -61,7 +64,7 @@
             </div>
         </nav>
     </header>
-	<div style="position: relative; z-index: 1; margin-top: 290px;">
+	<div style="position: relative; z-index: 1; margin-bottom: 40px;">
 		<div class="container">
 			<div class="card" id="chat2">
 				<div class="card-header">
@@ -89,8 +92,10 @@
 					{% endif %}
 					{% endfor %}
 				</div>
+			</div>
+			<div class="card" style="margin: auto;">
 				<div class="card-footer text-muted d-flex justify-content-start align-items-center p-3">
-					<textarea type="text" name="text_input" id="input" class="form-control" placeholder="Message.."></textarea>
+					<textarea type="text" name="text_input" id="input" class="form-control" placeholder="Message.." style="height: 40px;"></textarea>
 					<button class="btn btn-warning" type="submit" id="submit" style="padding-top: .55rem;">
 						Send
 					</button>
@@ -98,12 +103,46 @@
 			</div>
 		</div>
 	</div>
+	<footer id="foot" class="bg-dark mt-auto" style="color: aliceblue; text-align: center;">
+        <div class="container" style="padding-top: 10px;">
+            <h2>Contact details! </h2>
+            <div class="row" style="padding: 15px;">
+                <section class="col">
+                    <div>
+                        <a href="https://github.com/region-09" class="icon-github" style="text-decoration: none;">
+                            <i class="fab fa-github"></i>
+                            Github
+                        </a>
+                    </div>
+                </section>
+                <section class="col">
+                    <div>
+                        <a href="mailto:almazruslanov0195@gmail.com" class="icon-email" style="text-decoration: none;">
+                            <i class="fab fa-google"></i>
+                            Gmail
+                        </a>
+                    </div>
+                </section>
+                <section class="col">
+                    <div>
+                        <a href="https://www.linkedin.com/in/almaz-ruslanov-b95336215" class="icon-linkedin" style="text-decoration: none;">
+                            <i class="fab fa-linkedin-in"></i>
+                            LinkedIn
+                        </a>
+                    </div>
+                </section>
+            </div>
+            <div id="lowest" style="text-align: center;">
+                <p>Feel free to contact me by any of the above options.</p>
+            </div>
+        </div>
+    </footer>
 
 	<script>
 		let room = "{{room}}";
 		const user = "{{user}}";
 		const recipient = "{{recipient}}"
-		console.log(room);
+		// console.log(room);
 		const socket = new WebSocket('ws://'
 			+ window.location.host
 			+ '/ws/'
@@ -141,12 +180,6 @@
 			console.log("Socket3 closed!");
 		}
 		// notification end
-
-		// document.querySelector('#input').onkeyup = function (e) {
-		// 	if (e.keyCode === 13) { // enter, return 
-		// 		document.querySelector('#submit').click();
-		// 	}
-		// };
 
 		document.querySelector("#submit").onclick = (e) => {
 			inputfield = document.querySelector("#input");

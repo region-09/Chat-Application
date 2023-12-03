@@ -4,11 +4,8 @@
 
 #chat2  {
     border-color: transparent;
-    position: absolute; 
+    position: relative; 
     margin: auto;
-	top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
     
 #chat2 .form-control:focus {
@@ -57,7 +54,7 @@ h1 {
 }
 
 
-@media screen and (max-width: 350px) {
+/* @media screen and (max-width: 350px) {
     .chatmessages {
         width: 250px;
     }
@@ -92,4 +89,4 @@ h1 {
     .chatmessages {
         width: 1100px;
     }
-}
+} */

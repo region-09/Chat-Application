@@ -19,7 +19,7 @@ def index(request):
         current_user = request.user
         medias = None
         if (Media.objects.exists()):
-            medias = Media.objects.all().order_by("upload_date")[:20]
+            medias = Media.objects.all().order_by("-upload_date")[:20]
         if request.method == 'POST' and request.POST['address'] != '':
             props = request.POST['address'].split('*')
             media_owner = User.objects.get(username=props[0])
@@ -28,7 +28,7 @@ def index(request):
             date_object = datetime.datetime.strptime(props[2], "%Y-%m-%d %H:%M:%S%z")
             media = Media.objects.get(owner=media_owner, reposter=media_reposter, upload_date=date_object)
             if request.POST['command'] == 'share' and media_owner != current_user:
-                print('share')
+                # print('share')
                 shareds = Shared.objects.filter(user=current_user, media=media)
                 if (shareds.exists()) or current_user == media_reposter:
                     return redirect('/')
@@ -39,19 +39,19 @@ def index(request):
                     'medias': collector(request, medias), 'friend_names': get_friend_names(request.user),
                     'has_unread_message': has_unread_message(current_user), 'has_unreplied_request': has_unreplied_request(current_user)})
             elif request.POST['command'] == 'like':
-                print('like')
+                # print('like')
                 if Like.objects.filter(user=current_user, liked_media=media).exists():
                     return redirect('/')
                 Like.objects.create(user=current_user, liked_media=media)
                 return redirect('/')
             elif request.POST['command'] == 'dislike':
-                print('dislike')
+                # print('dislike')
                 media_to_delete = Like.objects.filter(user=current_user, liked_media=media)
                 if media_to_delete.exists():
                     media_to_delete.first().delete()
                 return redirect('/')
             elif request.POST['command'] == 'comment':
-                print('comment')
+                # print('comment')
                 Comment.objects.create(user=current_user, media=media, comment=request.POST['comment'])
                 return redirect('/')
             else:
@@ -81,7 +81,7 @@ def login(request):
         return render(request, 'login.html', {})
 
 def register(request):
-    print('Register')
+    # print('Register')
     if request.user.is_authenticated is False and request.method == 'POST':
         name = request.POST['name'].strip()
         surname = request.POST['surname'].strip()
@@ -93,6 +93,9 @@ def register(request):
         found = False
         if password != password2 or ' ' in password:
             messages.info(request, 'Passwords did not match or contains spaces')
+            found = True
+        if len(password) < 5:
+            messages.info(request, 'Passwords is too short at least 6 characters!')
             found = True
         if is_valid_email(email) is False:
             messages.info(request, 'Invalid email or contains spaces!')
@@ -135,7 +138,7 @@ def register(request):
 
 
 def chat(request, room):
-    print('chat!')
+    # print('chat!')
     if request.user.is_authenticated:
         user_names = room.split('-')
         current_username = request.user.username
@@ -157,7 +160,7 @@ def chat(request, room):
         messages = Message.objects.filter(Q(sender=current_user, recipient=current_recipient) | Q(sender=current_recipient,recipient=current_user)).order_by('timestamp')
         friendship = Friend.objects.filter(user1=current_user, user2=current_recipient).last()
         friendship2 = Friend.objects.filter(user1=current_recipient,user2=current_user).last()
-        print("friendship updated!")
+        # print("friendship updated!")
         friendship.last_message_date = datetime.datetime.now() 
         friendship2.last_message_date = datetime.datetime.now()
         friendship2.save()
@@ -178,7 +181,7 @@ def friends_message_view(request):
         user2_friends = Friend.objects.filter(user2=current_user)
         # Find common occurrences in both sets
         friends = user1_friends.filter(user2__in=user2_friends.values('user1'))
-        print('friends', friends)
+        # print('friends', friends)
         friend_names = []
         messages = []
         for friend in friends:
@@ -207,13 +210,15 @@ def friends_message_view(request):
                 else:
                     messages.append(received_message)
         zipped = zip(friends, messages)
-        print(friend_names)
+        # print(friend_names)
         return render(request, 'chat_view.html', {'user': current_user,'friends_messages': zipped, 
             'friend_names': friend_names, 'has_unreplied_request': has_unreplied_request(current_user)})
     else:
         return redirect('/')
     
 def upload(request):
+    if request.user.is_authenticated is False:
+        return redirect('/')
     if request.method == 'POST':
         user = request.user
         description = ''
@@ -222,30 +227,30 @@ def upload(request):
         if len(request.FILES) == 1:
             file = request.FILES['inputFile']
             if file.size > 100 * 1024 * 1024:
-                return render(request, 'upload.html', {'message': 'File is too big!'})
+                return render(request, 'upload.html', {'message': 'File is too big!', 'user': request.user})
             if file.name.endswith((".mp4", ".avi", ".mov")):
-                print('video received!, description:', description)
+                # print('video received!, description:', description)
                 Media.objects.create(owner=user, reposter=user, media=file, description=description, upload_date=datetime.datetime.now().replace(microsecond=0))
             elif file.name.endswith((".jpg", ".png", ".jpeg")):
-                print('image received!, description:', description)
+                # print('image received!, description:', description)
                 Media.objects.create(owner=user, reposter=user, media=file, description=description, upload_date=datetime.datetime.now().replace(microsecond=0))
             else:
                 messages.info(request, 'Incorrect format!')
-                return render(request, 'upload.html', {'message': 'Incorrect format!'})
+                return render(request, 'upload.html', {'message': 'Incorrect format!', 'user': request.user})
         elif len(description) != 0:
                 Media.objects.create(owner=user, reposter=user, description=description, upload_date=datetime.datetime.now().replace(microsecond=0))
-                print('have description only!')
+                # print('have description only!')
         else:
             print('nothing received!')
         return redirect('/')
     else:
-        return render(request, 'upload.html', {})
+        return render(request, 'upload.html', {'user': request.user})
 
 def requests(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            print(request.POST['from_user'])
-            print(request.POST['command'])
+            # print(request.POST['from_user'])
+            # print(request.POST['command'])
             from_user = User.objects.get(username=request.POST['from_user'])
             if (request.POST['command'] == 'add'):
                 if Friend.objects.filter(user1=request.user, user2=from_user).exists() is False:
@@ -272,7 +277,7 @@ def profile(request, username):
     current_user = request.user
     if request.user.is_authenticated:
         if request.method == 'POST':
-            print('post in profile', request.POST)
+            # print('post in profile', request.POST)
             friendship1 = Friend.objects.filter(user1=current_user, user2=profile_user)
             friendship2 = Friend.objects.filter(user1=profile_user, user2=current_user)
             if request.POST.get('button_action') == 'add_friend':
@@ -280,8 +285,16 @@ def profile(request, username):
                 if Requests.objects.filter(from_user=current_user, to_user=profile_user).exists() is False:
                     Requests.objects.create(from_user=current_user, to_user=profile_user)
                 return redirect('profile', username)
+            elif request.POST.get('button_action') == 'accept_friend':
+                if Friend.objects.filter(user1=current_user, user2=profile_user).exists():
+                    Friend.objects.get(user1=current_user, user2=profile_user).last_message_date = datetime.datetime.now().replace(microsecond=0)
+                else:
+                    Friend.objects.create(user1=current_user, user2=profile_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
+                Requests.objects.filter(from_user=current_user, to_user=profile_user).delete()
+                Requests.objects.filter(from_user=profile_user, to_user=current_user).delete()
+                return redirect('profile', username)
             elif request.POST.get('button_action') == 'remove_friend':
-                print('removing friend from friendlist')
+                # print('removing friend from friendlist')
                 request1 = Requests.objects.filter(from_user=current_user, to_user=profile_user)
                 request2 = Requests.objects.filter(from_user=profile_user, to_user=current_user)
                 if request1.exists():
@@ -294,7 +307,7 @@ def profile(request, username):
                     friendship2.first().delete()
                 return redirect('profile', username)
             elif request.POST.get('button_action') == 'write_message':
-                print('redirecting to chat page')
+                # print('redirecting to chat page')
                 if username < request.user.username:
                     return redirect('chat', (username + '-' + current_user.username))
                 else:
@@ -309,14 +322,27 @@ def profile(request, username):
                 'workplace': workplace, 'degree': degree,
                 'address': address, 'age': age}
                 if validator(request, data_dict):
-                    print('validate profile infos')
+                    # print('validate profile infos')
                     profile_info = ProfileInfo.objects.get(user=profile_user)
                     if len(request.FILES) == 1:
                         file = request.FILES['inputFile']
                         if file.name.endswith((".jpg", ".png", ".jpeg")):
                             profile_info.profile_image = file
                         else:
-                            return redirect('/')
+                            current = False
+                            friend = 0
+                            if request.user.username == profile_user.username:
+                                current = True
+                            if Friend.objects.filter(user1=request.user, user2=profile_user).exists() and Friend.objects.filter(user1=profile_user, user2=request.user).exists():
+                                friend = 3
+                            elif Friend.objects.filter(user1=request.user, user2=profile_user).exists() and Friend.objects.filter(user1=profile_user, user2=request.user).exists() is False:
+                                friend = 1
+                            elif Friend.objects.filter(user1=request.user, user2=profile_user).exists() is False and Friend.objects.filter(user1=profile_user, user2=request.user).exists():
+                                friend = 2
+                            return render(request, 'profile.html',
+                        {'user': profile_user, 'current': current, 'friend': friend, 'current_user': current_user,
+                            'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
+                            'has_unreplied_request': has_unreplied_request(request.user),'messages': 'Incorrect format! (png, jpeg, jpg only)'})
                     profile_info.degree = degree
                     profile_user.email = email
                     profile_info.workplace = workplace
@@ -338,7 +364,7 @@ def profile(request, username):
                 friend = 1
             elif Friend.objects.filter(user1=request.user, user2=profile_user).exists() is False and Friend.objects.filter(user1=profile_user, user2=request.user).exists():
                 friend = 2
-            print('get in profile')
+            # print('get in profile')
             return render(request, 'profile.html',
             {'user': profile_user, 'current': current, 'friend': friend, 'current_user': current_user,
                 'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
@@ -349,13 +375,14 @@ def people(request):
     if request.user.is_authenticated:
         peoples = User.objects.exclude(username=request.user.username)[:8]
         if request.method == 'POST':
-            print('people', request.POST['command'])
+            # print('people', request.POST['command'])
             if request.POST['command'] == 'search':
                 peoples = User.objects.filter(username__startswith=request.POST['search_handle']).exclude(username=request.user.username)
             elif request.POST['command'] == 'add_friend':
                 other_user = User.objects.get(username=request.POST['user'])
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
                     Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
+                    # print("add_friend part", request.user)
                 if Requests.objects.filter(from_user=other_user, to_user=request.user).exists():
                     Requests.objects.filter(from_user=other_user, to_user=request.user).delete()
                 else:
@@ -367,8 +394,9 @@ def people(request):
                 if Requests.objects.filter(from_user=request.user, to_user=other_user).exists():
                     Requests.objects.filter(from_user=request.user, to_user=other_user).delete()
                 if Friend.objects.filter(user1=request.user, user2=other_user).exists() is False:
+                    # print("accepted part", request.user)
                     Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
-                print("current", datetime.datetime.now().replace(microsecond=0))
+                # print("current", datetime.datetime.now().replace(microsecond=0))
             elif request.POST['command'] == 'delete_request':
                 # Deletes all relations they have!
                 other_user = User.objects.get(username=request.POST['user'])
@@ -390,22 +418,17 @@ def people(request):
                     return redirect('chat', (other_user.username + '-' + request.user.username))
                 else:
                     return redirect('chat', (request.user.username + '-' + other_user.username))
-            print('people rendering')
+            # print('people rendering')
             friendship = get_relationships(request.user, peoples)
             return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship),
                 'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
-                'has_unreplied_request': has_unreplied_request(request.user)})
+                'has_unreplied_request': has_unreplied_request(request.user), 'current_user': request.user})
         friendship = get_relationships(request.user, peoples)
         return render(request, 'people.html', {'user_and_friendship': zip(peoples,friendship),
                 'friend_names': get_friend_names(request.user), 'has_unread_message': has_unread_message(request.user),
                 'has_unreplied_request': has_unreplied_request(request.user), 'current_user': request.user})
     else:
         return redirect('/')
-
-
-# client = OpenAI(
-#     api_key="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"
-# )
 
 
 def chatGPT(request):
@@ -475,8 +498,6 @@ def validator(request, data_dict):
     return True
 
 def is_valid_email(email):
-
-
     try:
         validate_email(email)
         return True
@@ -519,7 +540,6 @@ def has_unread_message(user):
     for friend in friends:
         last_message = Message.objects.filter(sender=friend.user2, recipient=user)
         if last_message.exists():
-            print("CHECK", last_message.order_by('timestamp').last().timestamp, friend.last_message_date, 'username', friend.user1)
             if last_message.order_by('timestamp').last().timestamp > friend.last_message_date:
                 return True
     return False

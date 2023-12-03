@@ -13,7 +13,7 @@ class Friend(models.Model):
     # Define the two users who are friends
     user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user1_friends')
     user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user2_friends')
-    last_message_date = models.DateTimeField(auto_now_add=True)
+    last_message_date = models.DateTimeField()
 
 class Media(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner')
@@ -43,7 +43,7 @@ class ProfileInfo(models.Model):
     age = models.IntegerField(null=True, blank=True)
     address = models.CharField(max_length=100, null=True, blank=True, default='')
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    profile_image = models.FileField(upload_to='profile_images/', null=True, blank=True, default='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png')
+    profile_image = models.FileField(upload_to='profile_images/', null=True, blank=True, default='/profile_images/default.png')
 
 
 class Requests(models.Model):
