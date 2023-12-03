@@ -252,14 +252,18 @@ def requests(request):
             # print(request.POST['from_user'])
             # print(request.POST['command'])
             from_user = User.objects.get(username=request.POST['from_user'])
-            if (request.POST['command'] == 'add'):
+            if (request.POST['command'] == 'accept'):
                 if Friend.objects.filter(user1=request.user, user2=from_user).exists() is False:
                     Friend.objects.create(user1=request.user, user2=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
                 if Friend.objects.filter(user1=from_user, user2=request.user).exists() is False:
-                    Friend.objects.create(user2=request.user, user1=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
-            else:
-               Friend.objects.get(user1=from_user, user2=request.user).delete()
-            Requests.objects.get(from_user=from_user).delete()
+                    Friend.objects.create(user2=request.user, user1=from_user,last_message_date=datetime.datetime.now().replace(microsecond=0))    
+            elif (request.POST['command'] == 'remove'):
+                Friend.objects.filter(user1=from_user, user2=request.user).delete()
+                Friend.objects.filter(user1=request.user, user2=from_user).delete()
+            Requests.objects.filter(from_user=from_user, to_user=request.user).delete()
+            Requests.objects.filter(from_user=request.user, to_user=from_user).delete()
+            if (request.POST['command'] == 'accept'):
+                Requests.objects.create(from_user=request.user, to_user=from_user, accepted=True)
             return redirect('requests')
         else:
             request_db = Requests.objects.filter(to_user=request.user)
@@ -292,6 +296,7 @@ def profile(request, username):
                     Friend.objects.create(user1=current_user, user2=profile_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
                 Requests.objects.filter(from_user=current_user, to_user=profile_user).delete()
                 Requests.objects.filter(from_user=profile_user, to_user=current_user).delete()
+                Requests.objects.create(from_user=current_user, to_user=profile_user, accepted=True)
                 return redirect('profile', username)
             elif request.POST.get('button_action') == 'remove_friend':
                 # print('removing friend from friendlist')
@@ -397,6 +402,7 @@ def people(request):
                     # print("accepted part", request.user)
                     Friend.objects.create(user1=request.user, user2=other_user,last_message_date=datetime.datetime.now().replace(microsecond=0))
                 # print("current", datetime.datetime.now().replace(microsecond=0))
+                Requests.objects.create(from_user=request.user, to_user=other_user, accepted=True)
             elif request.POST['command'] == 'delete_request':
                 # Deletes all relations they have!
                 other_user = User.objects.get(username=request.POST['user'])

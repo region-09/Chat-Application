@@ -49,3 +49,4 @@ class ProfileInfo(models.Model):
 class Requests(models.Model):
     from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='from_user')
     to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='to_user')
+    accepted = models.BooleanField(default=False)
