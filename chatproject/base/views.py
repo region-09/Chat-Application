@@ -6,7 +6,6 @@ from .models import Friend, Message, Media, Shared, Like, Comment, Requests, Pro
 from django.db.models import Q
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from openai import OpenAI
 
 # TODO: make all only authenticated user usable only
 

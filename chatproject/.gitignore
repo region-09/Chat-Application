@@ -1,0 +1,14 @@
+# Docker
+.docker
+
+# Python
+chatproject/__pycache__/
+chatproject/*/__pycache__/
+chatproject/*/*/__pycache__/
+chatproject/*/*/*/__pycache__/
+.env/
+.venv/
+venv/
+
+# Local PostgreSQL data
+data/web/media
