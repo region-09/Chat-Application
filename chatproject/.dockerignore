@@ -6,10 +6,10 @@
 .docker
 
 # Python
-chatproject/__pycache__/
-chatproject/*/__pycache__/
-chatproject/*/*/__pycache__/
-chatproject/*/*/*/__pycache__/
+app/__pycache__/
+app/*/__pycache__/
+app/*/*/__pycache__/
+app/*/*/*/__pycache__/
 .env/
 .venv/
 venv/
